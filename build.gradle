@@ -28,9 +28,6 @@ buildscript {
             name = 'impactdevelopment-repo'
             url = 'https://impactdevelopment.github.io/maven/'
         }
-        maven {
-            url = 'https://www.dogforce-games.com/maven/'
-        }
         jcenter()
     }
 
@@ -88,7 +85,7 @@ task sourceJar(type: Jar, dependsOn: classes) {
 }
 
 minecraft {
-    mappings channel: 'snapshot', version: '20200813-1.16.1'
+    mappings channel: 'snapshot', version: '20200916-1.16.2'
 
     if (getProject().hasProperty("baritone.forge_build")) {
         reobfMappings 'searge'
@@ -144,9 +141,6 @@ repositories {
     maven {
         name = 'impactdevelopment-repo'
         url = 'https://impactdevelopment.github.io/maven/'
-    }
-    maven {
-        url = 'https://www.dogforce-games.com/maven/'
     }
 }
 
