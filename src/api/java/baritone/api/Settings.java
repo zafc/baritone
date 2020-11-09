@@ -64,7 +64,7 @@ public final class Settings {
     /**
      * Disable baritone's auto-tool at runtime, but still assume that another mod will provide auto tool functionality
      * <p>
-     * Specifically, path calculation will still assume that an auto tool wil run at execution time, even though
+     * Specifically, path calculation will still assume that an auto tool will run at execution time, even though
      * Baritone itself will not do that.
      */
     public final Setting<Boolean> assumeExternalAutoTool = new Setting<>(false);
@@ -532,6 +532,18 @@ public final class Settings {
     public final Setting<Boolean> backfill = new Setting<>(false);
 
     /**
+     * Shows popup message in the upper right corner, similarly to when you make an advancement
+     */
+    public final Setting<Boolean> logAsToast = new Setting<>(false);
+
+    /**
+     * The time of how long the message in the pop-up will display
+     * <p>
+     * If below 1000L (1sec), it's better to disable this
+     */
+    public final Setting<Long> toastTimer = new Setting<>(5000L);
+
+    /**
      * Print all the debug messages to chat
      */
     public final Setting<Boolean> chatDebug = new Setting<>(false);
@@ -727,6 +739,23 @@ public final class Settings {
      * After finding this many instances of the target block in the cache, it will stop expanding outward the chunk search.
      */
     public final Setting<Integer> maxCachedWorldScanCount = new Setting<>(10);
+
+    /**
+     * Sets the minimum y level whilst mining - set to 0 to turn off.
+     */
+    public final Setting<Integer> minYLevelWhileMining = new Setting<>(0);
+
+    /**
+     * This will only allow baritone to mine exposed ores, can be used to stop ore obfuscators on servers that use them.
+     */
+    public final Setting<Boolean> allowOnlyExposedOres = new Setting<>(false);
+
+    /**
+     * When allowOnlyExposedOres is enabled this is the distance around to search.
+     * <p>
+     * It is recommended to keep this value low, as it dramatically increases calculation times.
+     */
+    public final Setting<Integer> allowOnlyExposedOresDistance = new Setting<>(1);
 
     /**
      * When GetToBlock doesn't know any locations for the desired block, explore randomly instead of giving up.
