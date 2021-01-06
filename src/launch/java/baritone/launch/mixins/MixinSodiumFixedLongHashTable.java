@@ -19,6 +19,8 @@ package baritone.launch.mixins;
 
 import baritone.utils.accessor.IChunkArray;
 import baritone.utils.accessor.ISodiumChunkArray;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import net.minecraft.world.chunk.WorldChunk;
 import org.spongepowered.asm.mixin.*;
 
@@ -26,66 +28,51 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 
 @Pseudo
 @Mixin(targets = "me.jellysquid.mods.sodium.client.util.collections.FixedLongHashTable", remap = false)
-public class MixinSodiumFixedLongHashTable implements ISodiumChunkArray {
-    
-    @Unique
-    private int centerX = 0;
-    
-    @Unique
-    private int centerZ = 0;
-    
-    @Unique
-    private int dist = 0;
+public abstract class MixinSodiumFixedLongHashTable implements ISodiumChunkArray {
     
     @Shadow
-    @Final
-    protected Object[] value;
+    public abstract ObjectIterator<Long2ObjectMap.Entry<Object>> iterator();
     
-    // this will be un-used because we're copying to a vanilla chunk array.
+    @Shadow
+    public abstract Object put(final long k, final Object v);
+    
     @Override
     public void copyFrom(IChunkArray other) {
+        if (other instanceof ISodiumChunkArray) {
+            ObjectIterator<Long2ObjectMap.Entry<Object>> it = ((ISodiumChunkArray) other).callIterator();
+            while (it.hasNext()) {
+                Long2ObjectMap.Entry<Object> entry = it.next();
+                this.put(entry.getLongKey(), entry.getValue());
+            }
+        } else {
+            throw new RuntimeException("Unimplemented");
+        }
+    }
+    
+    @Override
+    public ObjectIterator<Long2ObjectMap.Entry<Object>> callIterator() {
+        return iterator();
+    }
+    
+    
+    @Override
+    public AtomicReferenceArray<WorldChunk> getChunks() {
         throw new RuntimeException("Unimplemented");
     }
     
     @Override
-    public AtomicReferenceArray<WorldChunk> getChunks() {
-        //either this or find a way to cast an [Ljava.lang.Object;
-        WorldChunk[] chunks = new WorldChunk[value.length];
-        for (int i = 0; i < value.length; ++i) {
-            chunks[i] = (WorldChunk) value[i];
-        }
-        return new AtomicReferenceArray<>(chunks);
-    }
-    
-    @Override
     public int centerX() {
-        return centerX;
+        throw new RuntimeException("Unimplemented");
     }
     
     @Override
     public int centerZ() {
-        return centerZ;
+        throw new RuntimeException("Unimplemented");
     }
     
     @Override
     public int viewDistance() {
-        return dist;
+        throw new RuntimeException("Unimplemented");
     }
-    
-    @Override
-    public void putCenterX(int x) {
-        this.centerX = x;
-    }
-    
-    @Override
-    public void putCenterZ(int z) {
-        this.centerZ = z;
-    }
-    
-    @Override
-    public void putViewDistance(int dist) {
-        this.dist = dist;
-    }
-    
     
 }

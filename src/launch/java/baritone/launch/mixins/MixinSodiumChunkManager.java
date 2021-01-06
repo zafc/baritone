@@ -28,6 +28,7 @@ import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.concurrent.locks.StampedLock;
 
@@ -56,26 +57,22 @@ public abstract class MixinSodiumChunkManager extends ClientChunkManager impleme
     @Override
     public ClientChunkManager createThreadSafeCopy() {
     
-        //we're just gonna aquire a read lock for this whole operation
-        long stamp = this.lock.readLock();
+        // we're just gonna acquire a write lock for this whole operation so it can't write any chunks.
+        // see https://github.com/jellysquid3/sodium-fabric/blob/d3528521d48a130322c910c6f0725cf365ebae6f/src/main/java/me/jellysquid/mods/sodium/client/world/SodiumChunkManager.java#L139
+        long stamp = this.lock.writeLock();
     
         try {
             ISodiumChunkArray refArr = extractReferenceArray();
-            refArr.putCenterX(centerX);
-            refArr.putCenterZ(centerZ);
-            refArr.putViewDistance(radius);
-            ClientChunkManager result = new ClientChunkManager(world, radius - 3); // -3 because its adds 3 for no reason lmao
+            ClientChunkManager result = (ClientChunkManager) Class.forName("me.jellysquid.mods.sodium.client.world.SodiumChunkManager").getConstructor(ClientWorld.class, int.class).newInstance(world, radius - 3); // -3 because it adds 3 for no reason lmao
             IChunkArray copyArr = ((IClientChunkProvider) result).extractReferenceArray();
             copyArr.copyFrom(refArr);
-            if (copyArr.viewDistance() != refArr.viewDistance()) {
-                throw new IllegalStateException(copyArr.viewDistance() + " " + refArr.viewDistance());
-            }
             return result;
+        } catch (InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException | ClassNotFoundException e) {
+            throw new RuntimeException("Sodium chunk manager initialization for baritone failed", e);
         } finally {
             // put this in finally so we can't break anything.
-            this.lock.unlockRead(stamp);
+            this.lock.unlockWrite(stamp);
         }
-    
     }
     @Override
     public ISodiumChunkArray extractReferenceArray() {

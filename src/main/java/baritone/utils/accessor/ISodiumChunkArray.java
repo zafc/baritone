@@ -17,11 +17,10 @@
 
 package baritone.utils.accessor;
 
-public interface ISodiumChunkArray extends IChunkArray {
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
-    void putCenterX(int x);
+public interface ISodiumChunkArray extends IChunkArray {
     
-    void putCenterZ(int z);
-    
-    void putViewDistance(int dist);
+    ObjectIterator<Long2ObjectMap.Entry<Object>> callIterator();
 }
