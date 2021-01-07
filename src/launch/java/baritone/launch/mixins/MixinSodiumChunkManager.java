@@ -22,11 +22,9 @@ import baritone.utils.accessor.IClientChunkProvider;
 import baritone.utils.accessor.ISodiumChunkArray;
 import net.minecraft.client.world.ClientChunkManager;
 import net.minecraft.client.world.ClientWorld;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Pseudo;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.*;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -54,6 +52,12 @@ public abstract class MixinSodiumChunkManager extends ClientChunkManager impleme
     @Final
     private ClientWorld world;
     
+    @Unique
+    private static Constructor<?> sodiumChunkManagerConstructor = null;
+    
+    @Unique
+    private static Field sodiumChunkArrayField = null;
+    
     @Override
     public ClientChunkManager createThreadSafeCopy() {
     
@@ -63,11 +67,14 @@ public abstract class MixinSodiumChunkManager extends ClientChunkManager impleme
     
         try {
             ISodiumChunkArray refArr = extractReferenceArray();
-            ClientChunkManager result = (ClientChunkManager) Class.forName("me.jellysquid.mods.sodium.client.world.SodiumChunkManager").getConstructor(ClientWorld.class, int.class).newInstance(world, radius - 3); // -3 because it adds 3 for no reason lmao
+            if (sodiumChunkManagerConstructor == null) {
+                sodiumChunkManagerConstructor = this.getClass().getConstructor(ClientWorld.class, int.class);
+            }
+            ClientChunkManager result = (ClientChunkManager) sodiumChunkManagerConstructor.newInstance(world, radius - 3); // -3 because it adds 3 for no reason lmao
             IChunkArray copyArr = ((IClientChunkProvider) result).extractReferenceArray();
             copyArr.copyFrom(refArr);
             return result;
-        } catch (InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException | ClassNotFoundException e) {
+        } catch (InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
             throw new RuntimeException("Sodium chunk manager initialization for baritone failed", e);
         } finally {
             // put this in finally so we can't break anything.
@@ -76,21 +83,24 @@ public abstract class MixinSodiumChunkManager extends ClientChunkManager impleme
     }
     @Override
     public ISodiumChunkArray extractReferenceArray() {
-        try {
-            for (Field f : Class.forName("me.jellysquid.mods.sodium.client.world.SodiumChunkManager").getDeclaredFields()) {
+        if (sodiumChunkArrayField == null) {
+            boolean flag = true;
+            for (Field f : this.getClass().getDeclaredFields()) {
                 if (ISodiumChunkArray.class.isAssignableFrom(f.getType())) {
-                    try {
-                        return (ISodiumChunkArray) f.get(this);
-                    } catch (IllegalAccessException e) {
-                        throw new RuntimeException(e);
-                    }
+                    sodiumChunkArrayField = f;
+                    flag = false;
+                    break;
                 }
+            } //else
+            if (flag) {
+                throw new RuntimeException(Arrays.toString(this.getClass().getDeclaredFields()));
             }
-            throw new RuntimeException(Arrays.toString(Class.forName("me.jellysquid.mods.sodium.client.world.SodiumChunkManager").getDeclaredFields()));
-        
-        //since it's the class we're mixin'ing to this should never be raised and shouldn't become a problem
-        } catch (ClassNotFoundException ignored) {}
-        return null;
+        }
+        try {
+            return (ISodiumChunkArray) sodiumChunkArrayField.get(this);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
     
     
