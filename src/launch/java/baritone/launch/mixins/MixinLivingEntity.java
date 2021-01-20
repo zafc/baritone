@@ -32,8 +32,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static org.spongepowered.asm.lib.Opcodes.GETFIELD;
-
 /**
  * @author Brady
  * @since 9/10/2018
@@ -69,7 +67,7 @@ public abstract class MixinLivingEntity extends Entity {
             method = "jump",
             at = @At(
                     value = "FIELD",
-                    opcode = GETFIELD,
+                    opcode = 180,
                     target = "net/minecraft/entity/LivingEntity.rotationYaw:F"
             )
     )
