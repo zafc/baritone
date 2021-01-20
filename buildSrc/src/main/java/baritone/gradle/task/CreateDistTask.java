@@ -40,12 +40,17 @@ public class CreateDistTask extends BaritoneGradleTask {
     @TaskAction
     protected void exec() throws Exception {
         super.verifyArtifacts();
-
+        Path api, standalone, unoptimized;
         // Define the distribution file paths
-        Path api             = getRelativeFile("dist/" + formatVersion(ARTIFACT_API));
-        Path standalone      = getRelativeFile("dist/" + formatVersion(ARTIFACT_STANDALONE));
-        Path unoptimized     = getRelativeFile("dist/" + formatVersion(ARTIFACT_UNOPTIMIZED));
-
+        if (getProject().hasProperty("baritone.fabric_build")) {
+            api = getRelativeFile("dist/" + formatVersion(ARTIFACT_FABRIC_API));
+            standalone = getRelativeFile("dist/" + formatVersion(ARTIFACT_FABRIC_STANDALONE));
+            unoptimized = getRelativeFile("dist/" + formatVersion(ARTIFACT_FABRIC_UNOPTIMIZED));
+        } else {
+            api = getRelativeFile("dist/" + formatVersion(ARTIFACT_API));
+            standalone = getRelativeFile("dist/" + formatVersion(ARTIFACT_STANDALONE));
+            unoptimized = getRelativeFile("dist/" + formatVersion(ARTIFACT_UNOPTIMIZED));
+        }
         // NIO will not automatically create directories
         Path dir = getRelativeFile("dist/");
         if (!Files.exists(dir)) {
