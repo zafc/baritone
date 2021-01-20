@@ -47,15 +47,20 @@ buildscript {
 
 import baritone.gradle.task.CreateDistTask
 import baritone.gradle.task.ProguardTask
+import baritone.gradle.fabric.CreateVolderYarn
+import net.minecraftforge.gradle.userdev.tasks.GenerateSRG
+import net.minecraftforge.gradle.userdev.tasks.RenameJarInPlace
 import org.apache.tools.ant.taskdefs.condition.Os
 
-def isMCP = !getProject().hasProperty("baritone.fabric_build")
-
 apply plugin: 'java'
-if (isMCP) {
+
+def mcpVersion = [channel: 'snapshot', version: '20190814-1.14.3']
+
+if (!getProject().hasProperty("baritone.fabric_build")) {
     apply plugin: 'net.minecraftforge.gradle'
     apply plugin: 'org.spongepowered.mixin'
 } else {
+    CreateVolderYarn.genMappings("1.16.4", mcpVersion)
     apply plugin: 'fabric-loom'
 }
 
@@ -96,56 +101,52 @@ task sourceJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
     from sourceSets.api.allSource
 }
-if (isMCP) {
+if (!getProject().hasProperty("baritone.fabric_build")) {
     minecraft {
-        mappings channel: 'snapshot', version: '20201028-1.16.3'
+        mappings mcpVersion
+        reobfMappings 'notch'
 
-        minecraft {
-            mappings channel: 'snapshot', version: '20190814-1.14.3'
-            reobfMappings 'notch'
+        runs {
+            client {
+                workingDirectory project.file('run')
+                source sourceSets.launch
 
-            runs {
-                client {
-                    workingDirectory project.file('run')
-                    source sourceSets.launch
+                main 'baritone.launch.LaunchTesting'
 
-                    main 'baritone.launch.LaunchTesting'
+                environment 'assetIndex', '{asset_index}'
+                environment 'assetDirectory', downloadAssets.output
+                environment 'nativesDirectory', extractNatives.output
 
-                    environment 'assetIndex', '{asset_index}'
-                    environment 'assetDirectory', downloadAssets.output
-                    environment 'nativesDirectory', extractNatives.output
+                environment 'tweakClass', 'baritone.launch.BaritoneTweaker'
 
-                    environment 'tweakClass', 'baritone.launch.BaritoneTweaker'
-
-                    if (Os.isFamily(Os.FAMILY_MAC)) {
-                        jvmArgs "-XstartOnFirstThread"
-                    }
+                if (Os.isFamily(Os.FAMILY_MAC)) {
+                    jvmArgs "-XstartOnFirstThread"
                 }
+            }
 
-                autoTest {
-                    workingDirectory project.file('autotest')
-                    source sourceSets.launch
+            autoTest {
+                workingDirectory project.file('autotest')
+                source sourceSets.launch
 
-                    main 'baritone.launch.LaunchTesting'
+                main 'baritone.launch.LaunchTesting'
 
-                    environment 'assetIndex', '{asset_index}'
-                    environment 'assetDirectory', downloadAssets.output
-                    environment 'nativesDirectory', extractNatives.output
+                environment 'assetIndex', '{asset_index}'
+                environment 'assetDirectory', downloadAssets.output
+                environment 'nativesDirectory', extractNatives.output
 
-                    environment 'tweakClass', 'baritone.launch.BaritoneTweaker'
-                    environment 'BARITONE_AUTO_TEST', 'true'
+                environment 'tweakClass', 'baritone.launch.BaritoneTweaker'
+                environment 'BARITONE_AUTO_TEST', 'true'
 
-                    if (Os.isFamily(Os.FAMILY_MAC)) {
-                        jvmArgs "-XstartOnFirstThread"
-                    }
+                if (Os.isFamily(Os.FAMILY_MAC)) {
+                    jvmArgs "-XstartOnFirstThread"
                 }
             }
         }
+    }
 
-        mixin {
-            defaultObfuscationEnv searge
-            add sourceSets.launch, 'baritone-refmap.json'
-        }
+    mixin {
+        defaultObfuscationEnv searge
+        add sourceSets.launch, 'baritone-refmap.json'
     }
 }
 
@@ -164,7 +165,7 @@ repositories {
 }
 
 dependencies {
-    if (isMCP) {
+    if (!getProject().hasProperty("baritone.fabric_build")) {
     minecraft 'com.github.ImpactDevelopment:Vanilla:1.14.4'
 
         runtime launchCompile('net.minecraft:launchwrapper:1.12') {
@@ -205,7 +206,7 @@ javadoc {
     classpath += sourceSets.api.compileClasspath
 }
 
-if (!isMCP) {
+if (!!getProject().hasProperty("baritone.fabric_build")) {
 
     tasks.withType(JavaCompile).configureEach {
         // ensure that the encoding is set to UTF-8, no matter what the system default is
@@ -253,7 +254,7 @@ File getClientJarFabric() {
         .get()
 }
 
-if (isMCP) {
+if (!getProject().hasProperty("baritone.fabric_build")) {
     task proguard(type: ProguardTask) {
         url 'https://downloads.sourceforge.net/project/proguard/proguard/6.0/proguard6.0.3.zip'
         extract 'proguard6.0.3/lib/proguard.jar'
