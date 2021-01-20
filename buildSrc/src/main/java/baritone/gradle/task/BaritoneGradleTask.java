@@ -43,7 +43,10 @@ class BaritoneGradleTask extends DefaultTask {
             ARTIFACT_STANDARD         = "%s-%s.jar",
             ARTIFACT_UNOPTIMIZED      = "%s-unoptimized-%s.jar",
             ARTIFACT_API              = "%s-api-%s.jar",
-            ARTIFACT_STANDALONE       = "%s-standalone-%s.jar";
+            ARTIFACT_STANDALONE       = "%s-standalone-%s.jar",
+            ARTIFACT_FABRIC_STANDALONE  = "%s-standalone-fabric-%s.jar",
+            ARTIFACT_FABRIC_API         = "%s-api-fabric-%s.jar",
+            ARTIFACT_FABRIC_UNOPTIMIZED = "%s-unoptimized-fabric-%s.jar";
 
     protected String artifactName, artifactVersion;
     protected Path artifactPath, artifactUnoptimizedPath, artifactApiPath, artifactStandalonePath, proguardOut;
@@ -53,10 +56,17 @@ class BaritoneGradleTask extends DefaultTask {
         this.artifactVersion = getProject().getVersion().toString();
 
         this.artifactPath                = this.getBuildFile(formatVersion(ARTIFACT_STANDARD));
-        this.artifactUnoptimizedPath     = this.getBuildFile(formatVersion(ARTIFACT_UNOPTIMIZED));
-        this.artifactApiPath             = this.getBuildFile(formatVersion(ARTIFACT_API));
-        this.artifactStandalonePath      = this.getBuildFile(formatVersion(ARTIFACT_STANDALONE));
+        
 
+        if (getProject().hasProperty("baritone.fabric_build")) {
+            this.artifactUnoptimizedPath = this.getBuildFile(formatVersion(ARTIFACT_FABRIC_UNOPTIMIZED));
+            this.artifactApiPath         = this.getBuildFile(formatVersion(ARTIFACT_FABRIC_API));
+            this.artifactStandalonePath  = this.getBuildFile(formatVersion(ARTIFACT_FABRIC_STANDALONE));
+        } else {
+            this.artifactUnoptimizedPath     = this.getBuildFile(formatVersion(ARTIFACT_UNOPTIMIZED));
+            this.artifactApiPath             = this.getBuildFile(formatVersion(ARTIFACT_API));
+            this.artifactStandalonePath      = this.getBuildFile(formatVersion(ARTIFACT_STANDALONE));
+        }
         this.proguardOut = this.getTemporaryFile(PROGUARD_EXPORT_PATH);
 
         if (!Files.exists(this.artifactPath)) {

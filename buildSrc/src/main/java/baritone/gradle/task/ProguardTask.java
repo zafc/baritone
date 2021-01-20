@@ -104,6 +104,10 @@ public class ProguardTask extends BaritoneGradleTask {
             if (f.toString().endsWith("-recomp.jar")) {
                 // remove MCP mapped jar
                 return;
+            } else if (getProject().hasProperty("baritone.fabric_build")) {
+                if (f.getName().endsWith("-v2.jar") && f.getName().startsWith("minecraft-")) {
+                    template.add(2, "-libraryjars '" + getSrgMcJar() + "'");
+                }
             }
             if (f.toString().endsWith("client-extra.jar")) {
                 // go from the extra to the original downloaded client
@@ -123,6 +127,10 @@ public class ProguardTask extends BaritoneGradleTask {
 
     private Stream<File> acquireDependencies() {
         return getProject().getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().findByName("launch").getRuntimeClasspath().getFiles().stream().filter(File::isFile);
+    }
+    
+    private File getSrgMcJar() {
+        return getProject().getTasks().findByName("copyMcJar").getOutputs().getFiles().getSingleFile();
     }
 
     private void proguardApi() throws Exception {

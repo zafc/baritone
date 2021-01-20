@@ -49,8 +49,7 @@ import baritone.gradle.task.CreateDistTask
 import baritone.gradle.task.ProguardTask
 import org.apache.tools.ant.taskdefs.condition.Os
 
-def isMCP = false
-
+def isMCP = !getProject().hasProperty("baritone.fabric_build")
 
 apply plugin: 'java'
 if (isMCP) {
@@ -101,51 +100,52 @@ if (isMCP) {
     minecraft {
         mappings channel: 'snapshot', version: '20201028-1.16.3'
 
-minecraft {
-    mappings channel: 'snapshot', version: '20190814-1.14.3'
-    reobfMappings 'notch'
+        minecraft {
+            mappings channel: 'snapshot', version: '20190814-1.14.3'
+            reobfMappings 'notch'
 
-        runs {
-            client {
-                workingDirectory project.file('run')
-                source sourceSets.launch
+            runs {
+                client {
+                    workingDirectory project.file('run')
+                    source sourceSets.launch
 
-                main 'baritone.launch.LaunchTesting'
+                    main 'baritone.launch.LaunchTesting'
 
-                environment 'assetIndex', '{asset_index}'
-                environment 'assetDirectory', downloadAssets.output
-                environment 'nativesDirectory', extractNatives.output
+                    environment 'assetIndex', '{asset_index}'
+                    environment 'assetDirectory', downloadAssets.output
+                    environment 'nativesDirectory', extractNatives.output
 
-                environment 'tweakClass', 'baritone.launch.BaritoneTweaker'
+                    environment 'tweakClass', 'baritone.launch.BaritoneTweaker'
 
-                if (Os.isFamily(Os.FAMILY_MAC)) {
-                    jvmArgs "-XstartOnFirstThread"
+                    if (Os.isFamily(Os.FAMILY_MAC)) {
+                        jvmArgs "-XstartOnFirstThread"
+                    }
                 }
-            }
 
-            autoTest {
-                workingDirectory project.file('autotest')
-                source sourceSets.launch
+                autoTest {
+                    workingDirectory project.file('autotest')
+                    source sourceSets.launch
 
-                main 'baritone.launch.LaunchTesting'
+                    main 'baritone.launch.LaunchTesting'
 
-                environment 'assetIndex', '{asset_index}'
-                environment 'assetDirectory', downloadAssets.output
-                environment 'nativesDirectory', extractNatives.output
+                    environment 'assetIndex', '{asset_index}'
+                    environment 'assetDirectory', downloadAssets.output
+                    environment 'nativesDirectory', extractNatives.output
 
-                environment 'tweakClass', 'baritone.launch.BaritoneTweaker'
-                environment 'BARITONE_AUTO_TEST', 'true'
+                    environment 'tweakClass', 'baritone.launch.BaritoneTweaker'
+                    environment 'BARITONE_AUTO_TEST', 'true'
 
-                if (Os.isFamily(Os.FAMILY_MAC)) {
-                    jvmArgs "-XstartOnFirstThread"
+                    if (Os.isFamily(Os.FAMILY_MAC)) {
+                        jvmArgs "-XstartOnFirstThread"
+                    }
                 }
             }
         }
-    }
 
-    mixin {
-        defaultObfuscationEnv searge
-        add sourceSets.launch, 'mixins.baritone.refmap.json'
+        mixin {
+            defaultObfuscationEnv searge
+            add sourceSets.launch, 'baritone-refmap.json'
+        }
     }
 }
 
@@ -187,7 +187,9 @@ dependencies {
 
         // this makes it compile with the forge tweak stuff
         implementation 'com.github.ImpactDevelopment:SimpleTweaker:1.2'
-        implementation 'net.minecraft:launchwrapper:1.12'
+        implementation('net.minecraft:launchwrapper:1.12') {
+            exclude module: 'lwjgl'
+        }
 
         implementation 'com.google.code.findbugs:jsr305:3.0.2'
     }
@@ -241,17 +243,39 @@ jar {
     }
 }
 
-task proguard(type: ProguardTask) {
-    url 'https://downloads.sourceforge.net/project/proguard/proguard/6.0/proguard6.0.3.zip'
-    extract 'proguard6.0.3/lib/proguard.jar'
+
+File getClientJarFabric() {
+    return project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().findByName("launch").getRuntimeClasspath().getFiles()
+        .stream()
+        .filter({f -> f.getName().endsWith("-v2.jar") && f.getName().startsWith("minecraft-")})
+        .map({f -> new File(f.getParentFile().getParentFile(), f.getName().toString().replace("mapped", "intermediary"))})
+        .findFirst()
+        .get()
 }
 
-    task proguard(type: ProguardTask, dependsOn: createSrgMc) { // TODO: dont need to create srg mc if doing notch build
+if (isMCP) {
+    task proguard(type: ProguardTask) {
         url 'https://downloads.sourceforge.net/project/proguard/proguard/6.0/proguard6.0.3.zip'
         extract 'proguard6.0.3/lib/proguard.jar'
     }
 
     task createDist(type: CreateDistTask, dependsOn: proguard)
 
-    build.finalizedBy(createDist)
+} else {
+    task copyMcJar(type: Copy) {
+        def mcJar = {getClientJarFabric()}
+
+        from mcJar
+        into 'build/createMcIntermediaryJar/'
+        rename {'client.jar'}
+    }
+
+    task proguard(type: ProguardTask, dependsOn: copyMcJar) {
+        url 'https://downloads.sourceforge.net/project/proguard/proguard/6.0/proguard6.0.3.zip'
+        extract 'proguard6.0.3/lib/proguard.jar'
+    }
+
+    task createDist(type: CreateDistTask, dependsOn: proguard)
+
 }
+build.finalizedBy(createDist)
