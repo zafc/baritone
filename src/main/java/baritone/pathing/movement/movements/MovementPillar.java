@@ -134,23 +134,23 @@ public class MovementPillar extends Movement {
     }
 
     public static boolean hasAgainst(CalculationContext context, int x, int y, int z) {
-        return MovementHelper.isBlockNormalCube(context.get(x + 1, y, z)) ||
-                MovementHelper.isBlockNormalCube(context.get(x - 1, y, z)) ||
-                MovementHelper.isBlockNormalCube(context.get(x, y, z + 1)) ||
-                MovementHelper.isBlockNormalCube(context.get(x, y, z - 1));
+        return MovementHelper.isBlockNormalCube(context.get(x + 1, y, z), new BlockPos(x + 1, y, z)) ||
+                MovementHelper.isBlockNormalCube(context.get(x - 1, y, z), new BlockPos(x - 1, y, z)) ||
+                MovementHelper.isBlockNormalCube(context.get(x, y, z + 1), new BlockPos(x, y, z + 1)) ||
+                MovementHelper.isBlockNormalCube(context.get(x, y, z - 1), new BlockPos(x, y, z - 1));
     }
 
     public static BlockPos getAgainst(CalculationContext context, BetterBlockPos vine) {
-        if (MovementHelper.isBlockNormalCube(context.get(vine.north()))) {
+        if (MovementHelper.isBlockNormalCube(context.get(vine.north()), vine.north())) {
             return vine.north();
         }
-        if (MovementHelper.isBlockNormalCube(context.get(vine.south()))) {
+        if (MovementHelper.isBlockNormalCube(context.get(vine.south()), vine.south())) {
             return vine.south();
         }
-        if (MovementHelper.isBlockNormalCube(context.get(vine.east()))) {
+        if (MovementHelper.isBlockNormalCube(context.get(vine.east()), vine.east())) {
             return vine.east();
         }
-        if (MovementHelper.isBlockNormalCube(context.get(vine.west()))) {
+        if (MovementHelper.isBlockNormalCube(context.get(vine.west()), vine.west())) {
             return vine.west();
         }
         return null;

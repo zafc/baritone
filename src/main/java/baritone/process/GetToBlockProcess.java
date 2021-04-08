@@ -183,7 +183,7 @@ public final class GetToBlockProcess extends BaritoneProcessHelper implements IG
         if (walkIntoInsteadOfAdjacent(gettingTo.getBlock())) {
             return new GoalTwoBlocks(pos);
         }
-        if (blockOnTopMustBeRemoved(gettingTo.getBlock()) && MovementHelper.isBlockNormalCube(baritone.bsi.get0(pos.up()))) { // TODO this should be the check for chest openability
+        if (blockOnTopMustBeRemoved(gettingTo.getBlock()) && MovementHelper.isBlockNormalCube(baritone.bsi.get0(pos.up()), pos.up())) { // TODO this should be the check for chest openability
             return new GoalBlock(pos.up());
         }
         return new GoalGetToBlock(pos);
