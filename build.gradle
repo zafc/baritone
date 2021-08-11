@@ -26,6 +26,7 @@ group 'baritone'
 version '1.7.0'
 
 import baritone.gradle.task.CreateDistTask
+import baritone.gradle.task.ProguardTask
 
 def compileType = project.hasProperty("baritone.fabric_build") ? "FABRIC" : project.hasProperty("baritone.forge_build") ? "FORGE" : "OFFICIAL"
 
@@ -161,10 +162,23 @@ if (compileType.equals("OFFICIAL")) {
     }
 }
 
+
+
+task proguard(type: ProguardTask) {
+    url 'https://downloads.sourceforge.net/project/proguard/v7.1.0-beta5/proguard-7.1.0-beta5.zip'
+    extract 'proguard-7.1.0-beta5/lib/proguard.jar'
+    compType compileType
+}
+
+task createDist(type: CreateDistTask, dependsOn: proguard)
+
+
 publishing {
     publications {
         maven(MavenPublication) {
-            artifact 'build/libs/baritone-1.7.0.jar'
+            artifact 'dist/baritone-api-fabric-1.7.0.jar'
         }
     }
 }
+
+build.finalizedBy(createDist)
