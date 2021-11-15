@@ -18,6 +18,7 @@
 package baritone.process;
 
 import baritone.Baritone;
+import baritone.api.BaritoneAPI;
 import baritone.api.pathing.goals.Goal;
 import baritone.api.pathing.goals.GoalBlock;
 import baritone.api.pathing.goals.GoalComposite;
@@ -45,6 +46,7 @@ import baritone.utils.schematic.MapArtSchematic;
 import baritone.utils.schematic.SchematicSystem;
 import baritone.utils.schematic.schematica.SchematicaHelper;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
@@ -71,7 +73,6 @@ import java.util.stream.Collectors;
 import static baritone.api.pathing.movement.ActionCosts.COST_INF;
 
 public final class BuilderProcess extends BaritoneProcessHelper implements IBuilderProcess {
-
     private HashSet<BetterBlockPos> incorrectPositions;
     private LongOpenHashSet observedCompleted; // positions that are completed even if they're out of render distance and we can't make sure right now
     private String name;
@@ -83,6 +84,13 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
     private int layer;
     private int numRepeats;
     private List<BlockState> approxPlaceable;
+    private Map<BlockState, Integer> missing;
+    private boolean active;
+    private Stack<Object> stateStack = new Stack<>();
+    private Vec3i schemSize;
+    private boolean fromAltoclefFinished;
+    private boolean fromAltoclef;
+    private BlockPos aboveBreak = null;
 
     public BuilderProcess(Baritone baritone) {
         super(baritone);
@@ -90,6 +98,13 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
 
     @Override
     public void build(String name, ISchematic schematic, Vec3i origin) {
+        //Shouldn't get initially called
+        if (this.fromAltoclef && this.stateStack.isEmpty()) {
+            System.out.println("BARITONE: PUSHED FROM BUILD");
+            pushState();
+            System.out.println("BARITONE: PUSHED");
+        }
+
         this.name = name;
         this.schematic = schematic;
         this.realSchematic = null;
@@ -110,10 +125,92 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         this.layer = Baritone.settings().startAtLayer.value;
         this.numRepeats = 0;
         this.observedCompleted = new LongOpenHashSet();
+        this.active = true;
+
+
+        if (this.missing != null) {
+            this.missing.clear();
+        } else {
+            missing = new HashMap<>();
+        }
+
+        this.schemSize = new Vec3i(schematic.widthX(), schematic.heightY(), schematic.lengthZ());
+        this.fromAltoclefFinished = false;
+        this.fromAltoclef = false;
+    }
+
+    @Override
+    public Vec3i getSchemSize() {
+        return schemSize;
+    }
+
+    private void pushState() {
+        stateStack.clear();
+        stateStack.push(this.approxPlaceable);
+        stateStack.push(this.ticks);
+        stateStack.push(this.incorrectPositions);
+        stateStack.push(this.name);
+        stateStack.push(this.schematic);
+        stateStack.push(this.realSchematic);
+        stateStack.push(this.origin);
+        stateStack.push(this.paused);
+        stateStack.push(this.layer);
+        stateStack.push(this.numRepeats);
+        stateStack.push(this.observedCompleted);
+        stateStack.push(this.active);
+        stateStack.push(this.missing);
+        stateStack.push(this.schemSize);
+        stateStack.push(this.fromAltoclefFinished);
+        stateStack.push(this.fromAltoclef);
+    }
+
+    private void popStack() {
+        this.fromAltoclef = (boolean) stateStack.pop();
+        this.fromAltoclefFinished = (boolean) stateStack.pop();
+        this.schemSize = (Vec3i) stateStack.pop();
+        this.missing = (Map<BlockState, Integer>) stateStack.pop();
+        this.active = (boolean) stateStack.pop();
+        this.observedCompleted = (LongOpenHashSet) stateStack.pop();
+        this.numRepeats = (int) stateStack.pop();
+        this.layer = (int) stateStack.pop();
+        this.paused = (boolean) stateStack.pop();
+        this.origin = (Vec3i) stateStack.pop();
+        this.realSchematic = (ISchematic) stateStack.pop();
+        this.schematic = (ISchematic) stateStack.pop();
+        System.out.println("TYPE: " + schematic.widthX());
+        this.name = (String) stateStack.pop();
+        this.incorrectPositions = (HashSet<BetterBlockPos>) stateStack.pop();
+        this.ticks = (int) stateStack.pop();
+        this.approxPlaceable = (List<BlockState>) stateStack.pop();
+
+        pushState();
+
+        if (!stateStack.isEmpty()) {
+            logDebug("ERROR: state stack was not empty after state restoration. Will throw away the rest for now.");
+            stateStack.clear();
+        }
+    }
+
+    @Override
+    public boolean clearState() {
+        final boolean isEmpty = !stateStack.isEmpty();
+        stateStack.clear();
+        return isEmpty;
+    }
+
+    @Override
+    public boolean isFromAltoclefFinished() {
+        return this.fromAltoclefFinished;
     }
 
     public void resume() {
-        paused = false;
+        if (!this.stateStack.isEmpty()) {
+            popStack();
+            System.out.println("BARITONE: POPED FROM BUILD");
+        }
+
+        this.paused = false;
+        this.active = true;
     }
 
     public void pause() {
@@ -123,6 +220,11 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
     @Override
     public boolean isPaused() {
         return paused;
+    }
+
+    @Override
+    public boolean isFromAltoclef() {
+        return this.fromAltoclef;
     }
 
     @Override
@@ -146,6 +248,19 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
 
         build(name, parsed, origin);
         return true;
+    }
+
+     @Override
+    public void build(String name, ISchematic schematic, Vec3i origin, boolean fromAltoclef) {
+        this.build(name, schematic, origin);
+         this.fromAltoclef = fromAltoclef;
+    }
+
+    @Override
+    public boolean build(String name, File schematic, Vec3i origin, boolean fromAltoclef) {
+        final boolean bl = this.build(name, schematic, origin);
+        this.fromAltoclef = fromAltoclef;
+        return bl;
     }
 
     @Override
@@ -176,22 +291,33 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
     }
 
     @Override
+    public void reset() {
+        onLostControl();
+    }
+
+    @Override
+    public Map<BlockState, Integer> getMissing() {
+        return (this.fromAltoclef) ? new HashMap<>(this.missing) : null;
+    }
+
+    @Override
     public List<BlockState> getApproxPlaceable() {
-        return new ArrayList<>(approxPlaceable);
+        return this.approxPlaceable;
     }
 
     @Override
     public boolean isActive() {
-        return schematic != null;
+        return active;//schematic != null && !paused;
     }
 
     public BlockState placeAt(int x, int y, int z, BlockState current) {
-        if (!isActive()) {
+        if (this.schematic == null) {
             return null;
         }
         if (!schematic.inSchematic(x - origin.getX(), y - origin.getY(), z - origin.getZ(), current)) {
             return null;
         }
+
         BlockState state = schematic.desiredState(x - origin.getX(), y - origin.getY(), z - origin.getZ(), current, this.approxPlaceable);
         if (state.getBlock() instanceof AirBlock) {
             return null;
@@ -435,7 +561,18 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
                 if (Baritone.settings().desktopNotifications.value && Baritone.settings().notificationOnBuildFinished.value) {
                     NotificationHelper.notify("Done building", false);
                 }
-                onLostControl();
+
+                if (this.fromAltoclef) {
+                    this.fromAltoclefFinished = true;
+                }
+
+                //onLostControl();
+                reset();
+
+                if (this.fromAltoclefFinished) {
+                    this.stateStack.clear();
+                }
+
                 return null;
             }
             // build repeat time
@@ -614,12 +751,14 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         return assemble(bcc, approxPlaceable, false);
     }
 
+    //private BlockPos specialBreak = null;
+
     private Goal assemble(BuilderCalculationContext bcc, List<BlockState> approxPlaceable, boolean logMissing) {
         List<BetterBlockPos> placeable = new ArrayList<>();
         List<BetterBlockPos> breakable = new ArrayList<>();
         List<BetterBlockPos> sourceLiquids = new ArrayList<>();
         List<BetterBlockPos> flowingLiquids = new ArrayList<>();
-        Map<BlockState, Integer> missing = new HashMap<>();
+        missing.clear();
         incorrectPositions.forEach(pos -> {
             BlockState state = bcc.bsi.get0(pos);
             if (state.getBlock() instanceof AirBlock) {
@@ -627,7 +766,9 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
                     placeable.add(pos);
                 } else {
                     BlockState desired = bcc.getSchematic(pos.x, pos.y, pos.z, state);
-                    missing.put(desired, 1 + missing.getOrDefault(desired, 0));
+                    if (desired != null) {
+                        missing.put(desired, 1 + missing.getOrDefault(desired, 0));
+                    }
                 }
             } else {
                 if (state.getBlock() instanceof LiquidBlock) {
@@ -646,6 +787,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         });
         List<Goal> toBreak = new ArrayList<>();
         breakable.forEach(pos -> toBreak.add(breakGoal(pos, bcc)));
+
         List<Goal> toPlace = new ArrayList<>();
         placeable.forEach(pos -> {
             if (!placeable.contains(pos.below()) && !placeable.contains(pos.below(2))) {
@@ -749,6 +891,16 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         return new GoalBreak(pos);
     }
 
+    @Override
+    public void setAboveBreak(BlockPos pos) {
+        this.aboveBreak = pos;
+    }
+
+    @Override
+    public BlockPos getAboveBreak() {
+        return this.aboveBreak;
+    }
+
     public static class GoalAdjacent extends GoalGetToBlock {
 
         private boolean allowSameLevel;
@@ -761,6 +913,15 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         }
 
         public boolean isInGoal(int x, int y, int z) {
+            if (x == this.x && y == this.y - 2 && z == this.z) {
+                final BlockPos ppos = Minecraft.getInstance().player.blockPosition();
+
+                if (ppos.getX() == x && ppos.getY() == y && ppos.getZ() == z) {
+                    BlockPos aboveGoalPos = new BlockPos(this.x, this.y + 1, this.z);
+                    BaritoneAPI.getProvider().getPrimaryBaritone().getBuilderProcess().setAboveBreak(aboveGoalPos);
+                }
+            }
+
             if (x == this.x && y == this.y && z == this.z) {
                 return false;
             }
@@ -796,6 +957,12 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
 
     @Override
     public void onLostControl() {
+        if (this.fromAltoclef && this.stateStack.isEmpty()) {
+            pushState();
+            //System.out.println("BARITONE: PUSHED FROM LOSTCONTROL");
+            //System.out.println("BARITONE: PUSHED!");
+        }
+
         incorrectPositions = null;
         name = null;
         schematic = null;
@@ -804,6 +971,11 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         numRepeats = 0;
         paused = false;
         observedCompleted = null;
+        origin = null;
+        missing = null;
+        schemSize = null;
+        fromAltoclef = false;
+        active = false;
     }
 
     @Override

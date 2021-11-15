@@ -17,13 +17,13 @@
 
 plugins {
     id 'java'
-    id 'dev.architectury.loom' version '0.8.0-SNAPSHOT'
+    id 'dev.architectury.loom' version '0.9.0-SNAPSHOT'
     id 'maven-publish'
 }
 
 
 group 'baritone'
-version '1.7.0'
+version '1.7.1'
 
 import baritone.gradle.task.CreateDistTask
 import baritone.gradle.task.ProguardTask
@@ -176,7 +176,7 @@ task createDist(type: CreateDistTask, dependsOn: proguard)
 publishing {
     publications {
         maven(MavenPublication) {
-            artifact 'dist/baritone-api-fabric-1.7.0.jar'
+            artifact 'dist/baritone-api-fabric-1.7.1.jar'
         }
     }
 }

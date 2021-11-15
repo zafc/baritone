@@ -67,6 +67,20 @@ public class AltoClefSettings {
         }
     }
 
+    /**
+     * If the original reference is passed and in the list,
+     * it will be removed from it.
+     *
+     * @param avoider original object reference that is in the list.
+     */
+    public void removeAvoidBlockBreak(Predicate<BlockPos> avoider) {
+        synchronized (breakMutex) {
+            if (_breakAvoiders.contains(avoider)) {
+                _breakAvoiders.remove(avoider);
+            }
+        }
+    }
+
     public void configurePlaceBucketButDontFall(boolean allow) {
         synchronized (propertiesMutex) {
             _dontPlaceBucketButStillFall = allow;
