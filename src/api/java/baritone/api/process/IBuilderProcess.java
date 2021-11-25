@@ -18,6 +18,7 @@
 package baritone.api.process;
 
 import baritone.api.schematic.ISchematic;
+import baritone.api.utils.BetterBlockPos;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
@@ -98,4 +99,16 @@ public interface IBuilderProcess extends IBaritoneProcess {
     BlockPos getAboveBreak();
 
     boolean clearState();
+
+    void addBlockToIgnoreInSchematic(final BlockPos pos);
+
+    void removeBlockToIgnoreInSchematic(final BlockPos pos);
+
+    void clearBlocksToIgnoreInSchematic();
+
+    void decideToIgnoreInSchematic(BetterBlockPos positionToPlace);
+
+    void noteInsert(final BlockPos pos);
+
+    boolean isPausedBecauseOfMissingMaterials();
 }
