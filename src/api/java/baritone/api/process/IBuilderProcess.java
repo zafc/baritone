@@ -111,4 +111,6 @@ public interface IBuilderProcess extends IBaritoneProcess {
     void noteInsert(final BlockPos pos);
 
     boolean isPausedBecauseOfMissingMaterials();
+
+
 }

@@ -55,6 +55,7 @@ import net.minecraft.util.Tuple;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.*;
@@ -94,6 +95,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
     private long systemMillisOfPrevRecalc = 0;
     private long recalcCounter = 0;
     private boolean pausedBecauseOfMissingMaterials = false;
+    private final Map<BlockState, Integer> protectedItems = new HashMap<>();
 
     public BuilderProcess(Baritone baritone) {
         super(baritone);
@@ -130,7 +132,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         this.observedCompleted = new LongOpenHashSet();
         this.active = true;
 
-        stopProtectItemOfMissing();
+        //stopProtectItemOfMissing();
 
         if (this.missing != null) {
             this.missing.clear();
@@ -145,14 +147,46 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
 
     private void protectItemOfMissing() {
         if (missing != null && missing.keySet() != null) {
-            missing.keySet().forEach(e -> Baritone.getAltoClefSettings().protectItem(e.getBlock().asItem()));
+            protectedItems.putAll(missing);
+            protectedItems.keySet().forEach(e -> {
+                if (!Baritone.getAltoClefSettings().isItemProtected(e.getBlock().asItem())) {
+                    System.out.println(Baritone.getAltoClefSettings().getProtectedItems().size());
+                    System.out.println("SET PROTECTION ");
+                    Baritone.getAltoClefSettings().protectItem(e.getBlock().asItem());
+                    System.out.println(Baritone.getAltoClefSettings().getProtectedItems().size());
+                }
+            });
+
+            /*
+            missing.keySet().forEach(e -> {
+                if (!Baritone.getAltoClefSettings().isItemProtected(e.getBlock().asItem())) {
+                    System.out.println(Baritone.getAltoClefSettings().getProtectedItems().size());
+                    System.out.println("SET PROTECTION ");
+                    Baritone.getAltoClefSettings().protectItem(e.getBlock().asItem());
+                    System.out.println(Baritone.getAltoClefSettings().getProtectedItems().size());
+
+                }
+            });*/
         }
     }
 
     private void stopProtectItemOfMissing() {
-        if (missing != null && missing.keySet() != null) {
-            missing.keySet().forEach(e -> Baritone.getAltoClefSettings().stopProtectingItem(e.getBlock().asItem()));
+        if (protectedItems != null && protectedItems.keySet() != null && protectedItems.size() > 0) {
+            protectedItems.keySet().forEach(e -> {
+                if (Baritone.getAltoClefSettings().isItemProtected(e.getBlock().asItem())) {
+                    Baritone.getAltoClefSettings().stopProtectingItem(e.getBlock().asItem());
+                }
+            });
         }
+        protectedItems.clear();
+
+        /*if (missing != null && missing.keySet() != null) {
+            missing.keySet().forEach(e -> {
+                if (Baritone.getAltoClefSettings().isItemProtected(e.getBlock().asItem())) {
+                    Baritone.getAltoClefSettings().stopProtectingItem(e.getBlock().asItem());
+                }
+            });
+        }*/
     }
 
     public boolean isPausedBecauseOfMissingMaterials() {
@@ -183,16 +217,18 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         stateStack.push(this.fromAltoclefFinished);
         stateStack.push(this.fromAltoclef);
         stateStack.push(this.pausedBecauseOfMissingMaterials);
+        //stateStack.push(this.protectedItems);
     }
 
     private void popStack() {
+        //this.protectedItems = (Map<BlockState, Integer>) stateStack.pop();
         this.pausedBecauseOfMissingMaterials = (boolean) stateStack.pop();
         this.fromAltoclef = (boolean) stateStack.pop();
         this.fromAltoclefFinished = (boolean) stateStack.pop();
         this.schemSize = (Vec3i) stateStack.pop();
-        stopProtectItemOfMissing();
+        //stopProtectItemOfMissing();
         this.missing = (Map<BlockState, Integer>) stateStack.pop();
-        protectItemOfMissing();
+        //protectItemOfMissing();
         this.active = (boolean) stateStack.pop();
         this.observedCompleted = (LongOpenHashSet) stateStack.pop();
         this.numRepeats = (int) stateStack.pop();
@@ -608,7 +644,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
             if (!info.brokenPreviously) {
                 info.brokenPreviously = true;
             }
-            System.out.println("remove " + pos.getX() + " " + pos.getY() + " " + pos.getZ() + " c: " + getHistoryCount(pos));
+            //System.out.println("remove " + pos.getX() + " " + pos.getY() + " " + pos.getZ() + " c: " + getHistoryCount(pos));
         }
 
     }
@@ -640,6 +676,10 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
 
     @Override
     public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
+        protectItemOfMissing();
+        //if (!Baritone.getAltoClefSettings().isItemProtected(Items.DIRT))
+        //Baritone.getAltoClefSettings().protectItem(Items.DIRT);
+        //Baritone.getAltoClefSettings().getProtectedItems().forEach(e -> System.out.println("PROTECTED: " + e.toString()));
         approxPlaceable = approxPlaceable(36);
         if (baritone.getInputOverrideHandler().isInputForcedDown(Input.CLICK_LEFT)) {
             ticks = 5;
@@ -648,6 +688,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         }
         baritone.getInputOverrideHandler().clearAllKeys();
         if (paused) {
+            System.out.println("a0");
             return new PathingCommand(null, PathingCommandType.CANCEL_AND_SET_GOAL);
         }
         if (Baritone.settings().buildInLayers.value) {
@@ -699,6 +740,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
             if (Baritone.settings().buildInLayers.value && layer < realSchematic.heightY()) {
                 logDirect("Starting layer " + layer);
                 layer++;
+                //System.out.println("a1");
                 return onTick(calcFailed, isSafeToCancel);
             }
             Vec3i repeat = Baritone.settings().buildRepeat.value;
@@ -721,12 +763,14 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
                     this.stateStack.clear();
                 }
 
+                //System.out.println("a2");
                 return null;
             }
             // build repeat time
             layer = 0;
             origin = new BlockPos(origin).offset(repeat);
             logDirect("Repeating build in vector " + repeat + ", new origin is " + origin);
+            System.out.println("a3");
             return onTick(calcFailed, isSafeToCancel);
         }
 
@@ -777,6 +821,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
                     noteRemoval(pos);
                 baritone.getInputOverrideHandler().setInputForceState(Input.CLICK_LEFT, true);
             }
+            System.out.println("a");
             return new PathingCommand(null, PathingCommandType.CANCEL_AND_SET_GOAL);
         }
         List<BlockState> desirableOnHotbar = new ArrayList<>();
@@ -790,6 +835,9 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
                 //System.out.println("RIGHT A");
                 baritone.getInputOverrideHandler().setInputForceState(Input.CLICK_RIGHT, true);
             }
+            //System.out.println("goal");
+            System.out.println("b");
+            stopProtectItemOfMissing();
             return new PathingCommand(null, PathingCommandType.CANCEL_AND_SET_GOAL);
         }
 
@@ -812,6 +860,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
                 for (BlockState desired : noValidHotbarOption) {
                     if (valid(approxPlaceable.get(i), desired, true)) {
                         baritone.getInventoryBehavior().attemptToPutOnHotbar(i, usefulSlots::contains);
+                        System.out.println("c");
                         break outer;
                     }
                 }
@@ -832,8 +881,15 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
                 return new PathingCommand(null, PathingCommandType.REQUEST_PAUSE);
             }
         }
+        System.out.println("big goal");
         return new PathingCommandContext(goal, PathingCommandType.FORCE_REVALIDATE_GOAL_AND_PATH, bcc);
     }
+
+
+/*
+    public boolean assumingStuckOnPathing() {
+
+    }*/
 
     private boolean recalc(BuilderCalculationContext bcc) {
         if (incorrectPositions == null) {
@@ -934,7 +990,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         List<BetterBlockPos> breakable = new ArrayList<>();
         List<BetterBlockPos> sourceLiquids = new ArrayList<>();
         List<BetterBlockPos> flowingLiquids = new ArrayList<>();
-        stopProtectItemOfMissing();
+        //stopProtectItemOfMissing();
         missing.clear();
         incorrectPositions.forEach(pos -> {
             BlockState state = bcc.bsi.get0(pos);
@@ -979,6 +1035,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         if (toBreak.isEmpty()) {
             if (!missing.isEmpty()) {
                 this.pausedBecauseOfMissingMaterials = true;
+                System.out.println("prot called");
                 protectItemOfMissing();
             }
 
@@ -999,7 +1056,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
 
         //if (!missing.isEmpty()) {
         this.pausedBecauseOfMissingMaterials = false;
-        stopProtectItemOfMissing();
+        //stopProtectItemOfMissing();
         //}
 
         return new GoalComposite(toBreak.toArray(new Goal[0]));
@@ -1070,7 +1127,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
 
     private Goal breakGoal(BlockPos pos, BuilderCalculationContext bcc) {
         if (Baritone.settings().goalBreakFromAbove.value && bcc.bsi.get0(pos.above()).getBlock() instanceof AirBlock && bcc.bsi.get0(pos.above(2)).getBlock() instanceof AirBlock) { // TODO maybe possible without the up(2) check?
-            System.out.println("GoalBreak JankyGoalComposite");
+            //System.out.println("GoalBreak JankyGoalComposite");
             return new JankyGoalComposite(new GoalBreak(pos), new GoalGetToBlock(pos.above()) {
                 @Override
                 public boolean isInGoal(int x, int y, int z) {
@@ -1082,7 +1139,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
             });
         }
         //TODO: maybe noteRemoval here?
-        System.out.println("GoalBreak");
+        //System.out.println("GoalBreak");
         return new GoalBreak(pos);
     }
 
@@ -1169,7 +1226,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         origin = null;
         //even if more blocks are blacklisted than required, it is expected that the sourcing trip only starts if the bot fails to add *any* new resources to the structure.
         //since only that amount is specifically sourced, we just blacklist any occurrence.
-        stopProtectItemOfMissing();
+        //stopProtectItemOfMissing();
         missing = null;
         schemSize = null;
         fromAltoclef = false;
