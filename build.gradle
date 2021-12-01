@@ -126,7 +126,7 @@ tasks.withType(JavaCompile).configureEach {
     // The Minecraft launcher currently installs Java 8 for users, so your mod probably wants to target Java 8 too
     // JDK 9 introduced a new way of specifying this that will make sure no newer classes or methods are used.
     // We'll use that if it's available, but otherwise we'll use the older option.
-    def targetVersion = 16
+    def targetVersion = 17
     if (JavaVersion.current().isJava9Compatible()) {
         it.options.release = targetVersion
     }
@@ -182,3 +182,27 @@ task createDist(type: CreateDistTask, dependsOn: proguard)
 
 
 build.finalizedBy(createDist)
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifact 'dist/baritone-api-fabric-' + version + '.jar'
+        }
+    }
+
+    repositories {
+        maven {
+            name = "meteor-maven"
+            url = "https://maven.meteordev.org/snapshots"
+
+            credentials {
+                username = System.getenv("MAVEN_METEOR_ALIAS")
+                password = System.getenv("MAVEN_METEOR_TOKEN")
+            }
+
+            authentication {
+                basic(BasicAuthentication)
+            }
+        }
+    }
+}
