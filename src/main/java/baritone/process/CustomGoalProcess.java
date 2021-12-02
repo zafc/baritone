@@ -24,6 +24,7 @@ import baritone.api.process.PathingCommand;
 import baritone.api.process.PathingCommandType;
 import baritone.utils.BaritoneProcessHelper;
 import baritone.utils.NotificationHelper;
+import baritone.utils.Snake;
 
 /**
  * As set by ExampleBaritoneControl or something idk
@@ -43,6 +44,8 @@ public final class CustomGoalProcess extends BaritoneProcessHelper implements IC
      * @see State
      */
     private State state;
+
+    private Snake snake;
 
     public CustomGoalProcess(Baritone baritone) {
         super(baritone);
@@ -76,6 +79,13 @@ public final class CustomGoalProcess extends BaritoneProcessHelper implements IC
 
     @Override
     public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
+        if (snake == null) snake = new Snake();
+        snake.tick();
+        if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
+            return snake.getRunAwayCommand();
+        }
+        snake.printCurrent();
+
         switch (this.state) {
             case GOAL_SET:
                 return new PathingCommand(this.goal, PathingCommandType.CANCEL_AND_SET_GOAL);

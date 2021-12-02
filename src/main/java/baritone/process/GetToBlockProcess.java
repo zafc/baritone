@@ -31,6 +31,8 @@ import baritone.pathing.movement.CalculationContext;
 import baritone.pathing.movement.MovementHelper;
 import baritone.utils.BaritoneProcessHelper;
 import java.util.*;
+
+import baritone.utils.Snake;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.block.Block;
@@ -45,6 +47,7 @@ public final class GetToBlockProcess extends BaritoneProcessHelper implements IG
 
     private int tickCount = 0;
     private int arrivalTickCount = 0;
+    private Snake snake;
 
     public GetToBlockProcess(Baritone baritone) {
         super(baritone);
@@ -67,6 +70,13 @@ public final class GetToBlockProcess extends BaritoneProcessHelper implements IG
 
     @Override
     public synchronized PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
+        if (snake == null) snake = new Snake();
+        snake.tick();
+        if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
+            return snake.getRunAwayCommand();
+        }
+        snake.printCurrent();
+
         if (knownLocations == null) {
             rescan(new ArrayList<>(), new CalculationContext(baritone));
         }
