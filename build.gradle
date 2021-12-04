@@ -23,7 +23,7 @@ plugins {
 
 
 group 'baritone'
-version '1.7.1-meloweh-alpha.3'
+version '1.7.0-meloweh-alpha.3'
 
 import baritone.gradle.task.CreateDistTask
 import baritone.gradle.task.ProguardTask

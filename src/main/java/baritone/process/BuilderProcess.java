@@ -684,7 +684,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
             return snake.getRunAwayCommand();
         }
-        snake.printCurrent();
+        //snake.printCurrent();
 
         protectItemOfMissing();
         //if (!Baritone.getAltoClefSettings().isItemProtected(Items.DIRT))

@@ -75,7 +75,7 @@ public final class GetToBlockProcess extends BaritoneProcessHelper implements IG
         if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
             return snake.getRunAwayCommand();
         }
-        snake.printCurrent();
+        //snake.printCurrent();
 
         if (knownLocations == null) {
             rescan(new ArrayList<>(), new CalculationContext(baritone));

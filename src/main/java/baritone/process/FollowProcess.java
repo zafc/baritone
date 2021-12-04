@@ -56,7 +56,7 @@ public final class FollowProcess extends BaritoneProcessHelper implements IFollo
         if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
             return snake.getRunAwayCommand();
         }
-        snake.printCurrent();
+        //snake.printCurrent();
 
         scanWorld();
         Goal goal = new GoalComposite(cache.stream().map(this::towards).toArray(Goal[]::new));

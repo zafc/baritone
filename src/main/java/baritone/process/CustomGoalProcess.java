@@ -77,14 +77,31 @@ public final class CustomGoalProcess extends BaritoneProcessHelper implements IC
         return this.state != State.NONE;
     }
 
+    private boolean ensureSnake() {
+        final boolean present = this.snake != null;
+        if (!present) snake = new Snake();
+        return present;
+    }
+
+    @Override
+    public boolean activateRunAway() {
+        ensureSnake();
+        return this.snake.activateRunAway();
+    }
+
+    @Override
+    public boolean isRunAwayActive() {
+        return this.snake.isRunAwayActive();
+    }
+
     @Override
     public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
-        if (snake == null) snake = new Snake();
+        ensureSnake();
         snake.tick();
         if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
             return snake.getRunAwayCommand();
         }
-        snake.printCurrent();
+        //snake.printCurrent();
 
         switch (this.state) {
             case GOAL_SET:

@@ -2,8 +2,6 @@ package baritone.utils;
 
 import baritone.api.BaritoneAPI;
 import baritone.api.behavior.IPathingBehavior;
-import baritone.api.pathing.goals.Goal;
-import baritone.api.pathing.goals.GoalRunAway;
 import baritone.api.pathing.goals.GoalXZ;
 import baritone.api.pathing.path.IPathExecutor;
 import baritone.api.process.PathingCommand;
@@ -70,10 +68,20 @@ public final class Snake {
         return this.vectors.entrySet().removeIf(e -> !traversedChunks.stream().anyMatch(c -> isSameChunk(e.getValue().chunkPos, c.chunkPos)));
     }
 
-    boolean pathing = false;
-    BetterBlockPos stuckPos;
-    RandomSpotNearby randSpot = new RandomSpotNearby(16d);
-    BetterBlockPos targetPos;
+    private boolean pathing = false;
+    private BetterBlockPos stuckPos;
+    private RandomSpotNearby randSpot = new RandomSpotNearby(16d);
+    private BetterBlockPos targetPos;
+
+    public boolean activateRunAway() {
+        final boolean old = pathing;
+        pathing = true;
+        return old;
+    }
+
+    public boolean isRunAwayActive() {
+        return pathing;
+    }
 
     public PathingCommand getRunAwayCommand() {
         final BetterBlockPos curr = getCurrent();
@@ -144,6 +152,7 @@ public final class Snake {
         final List<BetterBlockPos> bbp = c.getPath().positions();
         if (isNull(bbp)) return null;
         final int posIndex = c.getPosition();
+        if (c.getPath().positions().size() <= posIndex) return null;
         final BetterBlockPos pos = c.getPath().positions().get(posIndex);
         return pos;
     }

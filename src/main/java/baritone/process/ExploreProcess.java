@@ -86,7 +86,7 @@ public final class ExploreProcess extends BaritoneProcessHelper implements IExpl
         if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
             return snake.getRunAwayCommand();
         }
-        snake.printCurrent();
+        //snake.printCurrent();
 
         if (calcFailed) {
             logDirect("Failed");
