@@ -684,7 +684,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
             return snake.getRunAwayCommand();
         }
-        //snake.printCurrent();
+        snake.printCurrent();
 
         protectItemOfMissing();
         //if (!Baritone.getAltoClefSettings().isItemProtected(Items.DIRT))
@@ -1292,6 +1292,12 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         }
         if (current.getBlock().defaultBlockState().equals(desired.getBlock().defaultBlockState())) {
             if (current.getBlock() instanceof CrossCollisionBlock) {
+                return true;
+            }
+            if (desired.getBlock() instanceof ChestBlock) {
+                return true;
+            }
+            if (desired.getBlock() instanceof DoorBlock) {
                 return true;
             }
         }

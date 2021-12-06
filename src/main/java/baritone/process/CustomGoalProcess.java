@@ -91,6 +91,7 @@ public final class CustomGoalProcess extends BaritoneProcessHelper implements IC
 
     @Override
     public boolean isRunAwayActive() {
+        ensureSnake();
         return this.snake.isRunAwayActive();
     }
 
@@ -101,7 +102,7 @@ public final class CustomGoalProcess extends BaritoneProcessHelper implements IC
         if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
             return snake.getRunAwayCommand();
         }
-        //snake.printCurrent();
+        snake.printCurrent();
 
         switch (this.state) {
             case GOAL_SET:

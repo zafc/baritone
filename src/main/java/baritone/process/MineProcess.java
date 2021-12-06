@@ -79,7 +79,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
         if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
             return snake.getRunAwayCommand();
         }
-        //snake.printCurrent();
+        snake.printCurrent();
 
         if (desiredQuantity > 0) {
             int curr = ctx.player().getInventory().items.stream()
