@@ -25,6 +25,7 @@ import baritone.api.process.PathingCommandType;
 import baritone.utils.BaritoneProcessHelper;
 import baritone.utils.NotificationHelper;
 import baritone.utils.Snake;
+import baritone.utils.Trail;
 
 /**
  * As set by ExampleBaritoneControl or something idk
@@ -45,7 +46,7 @@ public final class CustomGoalProcess extends BaritoneProcessHelper implements IC
      */
     private State state;
 
-    private Snake snake;
+    private Trail snake;
 
     public CustomGoalProcess(Baritone baritone) {
         super(baritone);
@@ -79,7 +80,7 @@ public final class CustomGoalProcess extends BaritoneProcessHelper implements IC
 
     private boolean ensureSnake() {
         final boolean present = this.snake != null;
-        if (!present) snake = new Snake();
+        if (!present) snake = new Trail();
         return present;
     }
 

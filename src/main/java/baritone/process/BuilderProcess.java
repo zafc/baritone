@@ -98,7 +98,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
     private long recalcCounter = 0;
     private boolean pausedBecauseOfMissingMaterials = false;
     private final Map<BlockState, Integer> protectedItems = new HashMap<>();
-    private Snake snake;
+    private Trail snake;
 
     public BuilderProcess(Baritone baritone) {
         super(baritone);
@@ -679,7 +679,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
 
     @Override
     public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
-        if (snake == null) snake = new Snake();
+        if (snake == null) snake = new Trail();
         snake.tick();
         if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
             return snake.getRunAwayCommand();

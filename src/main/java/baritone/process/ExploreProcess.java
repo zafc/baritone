@@ -32,6 +32,7 @@ import baritone.cache.CachedWorld;
 import baritone.utils.BaritoneProcessHelper;
 import baritone.utils.NotificationHelper;
 import baritone.utils.Snake;
+import baritone.utils.Trail;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -47,7 +48,7 @@ public final class ExploreProcess extends BaritoneProcessHelper implements IExpl
     private BlockPos explorationOrigin;
     private IChunkFilter filter;
     private int distanceCompleted;
-    private Snake snake;
+    private Trail snake;
 
     public ExploreProcess(Baritone baritone) {
         super(baritone);
@@ -81,7 +82,7 @@ public final class ExploreProcess extends BaritoneProcessHelper implements IExpl
 
     @Override
     public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
-        if (snake == null) snake = new Snake();
+        if (snake == null) snake = new Trail();
         snake.tick();
         if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
             return snake.getRunAwayCommand();

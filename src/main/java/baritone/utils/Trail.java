@@ -12,20 +12,16 @@ import net.minecraft.world.level.ChunkPos;
 
 import java.util.*;
 
-public final class Snake {
-    private final Map<BetterBlockPos, Pack> vectors;
+public final class Trail {
     private final Queue<Pack> traversedChunks;
     private BetterBlockPos prev;
-    private final BlockStateInterface bsi;
     private final IPlayerContext player;
-    private final static int VECTOR_LIMIT = 400;
+    private final static int VECTOR_LIMIT = 350;
     private final static int CROSS_LIMIT = 20;
     private final static int CHUNK_TAIL_MAX = 4*4;
 
-    public Snake() {
-        this.vectors = new HashMap<>();
+    public Trail() {
         this.player = BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext();
-        this.bsi = new BlockStateInterface(this.player);
         this.traversedChunks = new ArrayDeque<>();
     }
 
@@ -34,38 +30,39 @@ public final class Snake {
         return pos1.getX() == pos2.getX() && pos1.getY() == pos2.getY() && pos1.getZ() == pos2.getZ();
     }
 
-
-    private boolean contains(final BetterBlockPos pos) {
-        return this.vectors.keySet().stream().anyMatch(e -> equalPos(e, pos));
+    private boolean equalChunk(final ChunkPos c1, final ChunkPos c2) {
+        return c1.x == c2.x && c1.z == c2.z;
     }
 
     public boolean passedLimits() {
-        return /*this.vectors.size() > VECTOR_LIMIT || */vectors.entrySet().stream().anyMatch(e -> e.getValue().crossings > CROSS_LIMIT);
+        return traversedChunks.stream().anyMatch(e ->
+                e.crossings.entrySet().stream().anyMatch(a -> a.getValue() > CROSS_LIMIT));
+        //return /*this.vectors.size() > VECTOR_LIMIT || */vectors.entrySet().stream().anyMatch(e -> e.getValue().crossings > CROSS_LIMIT);
     }
 
-    private BetterBlockPos getOrigRef(final BetterBlockPos pos) {
-        final Optional<BetterBlockPos> opt = vectors.keySet().stream().filter(e -> equalPos(e, pos)).findFirst();
-        if (opt.isPresent()) {
-            return opt.get();
-        }
-        return null;
+    private int getVectorCount() {
+        return traversedChunks.stream().mapToInt(e -> e.crossings.size()).sum();
     }
 
-    private boolean isSameChunk(final ChunkPos c1, final ChunkPos c2) {
-        return c1.x == c2.x && c1.z == c2.z;
+    private boolean passedVectorCountLimit() {
+        return getVectorCount() > VECTOR_LIMIT;
+    }
+    private Optional<Pack> getRefFromTraversedChunks(final ChunkPos pos) {
+        return traversedChunks.stream().filter(e -> equalChunk(e.chunkPos, pos)).findFirst();
     }
 
     public void reset() {
         traversedChunks.clear();
-        vectors.clear();
         prev = null;
         pathing = false;
         stuckPos = null;
         targetPos = null;
     }
 
-    private boolean removeOutsiders() {
-        return this.vectors.entrySet().removeIf(e -> !traversedChunks.stream().anyMatch(c -> isSameChunk(e.getValue().chunkPos, c.chunkPos)));
+    private Pack removeOutsiders() {
+        if (traversedChunks.size() > CHUNK_TAIL_MAX) return traversedChunks.poll();
+        if (passedVectorCountLimit()) traversedChunks.clear();
+        return null;
     }
 
     private boolean pathing = false;
@@ -95,48 +92,39 @@ public final class Snake {
 
         if (curr.closerThan(targetPos, 3d)) {
             reset();
-            return null; //new PathingCommand(null, PathingCommandType.DEFER);
+            return null;
         }
         return new PathingCommand(new GoalXZ(targetPos), PathingCommandType.FORCE_REVALIDATE_GOAL_AND_PATH);
+    }
+
+    private int addOrInc(final Pack pack, final BetterBlockPos blockPos, final boolean shouldAddPack) {
+        final Optional<BetterBlockPos> optRefBlockPos = pack.crossings.keySet().stream().filter(e -> equalPos(e, blockPos)).findFirst();
+        final BetterBlockPos refBlockPos = (optRefBlockPos.isEmpty()) ? blockPos : optRefBlockPos.get();
+        final int counter = (optRefBlockPos.isEmpty()) ? 1 : pack.crossings.get(refBlockPos) + 1;
+        pack.crossings.put(refBlockPos, counter);
+        if (shouldAddPack) traversedChunks.add(pack);
+        return counter;
     }
 
     public void tick() {
         final BetterBlockPos curr = getCurrent();
         if (isNull(curr) || equalPos(prev, curr)) return;
         prev = curr;
-
         final ChunkPos chunkPos = this.player.world().getChunk(curr).getPos();
-        if (!traversedChunks.stream().anyMatch(e -> isSameChunk(e.chunkPos, chunkPos))) {
-            traversedChunks.add(new Pack(chunkPos));
-            //TODO: save block pos index list in their chunk. if the chunk gets removed
-            // just iterate over it and remove that element in vectors over that index.
-            // Iteration steps can be cut down to vectors.size()/CHUNK_TAIL_MAX + CHUNK_TAIL_MAX
-            while (traversedChunks.size() > CHUNK_TAIL_MAX) traversedChunks.poll();
-        }
-
-        if (contains(curr)) {
-            final BetterBlockPos orig = getOrigRef(curr);
-            final Pack pack = this.vectors.get(orig);
-            pack.crossings++;
-            this.vectors.put(orig, pack);
-        } else {
-            final Pack pack = new Pack(chunkPos);
-            vectors.put(curr, pack);
-        }
-
-        if (this.vectors.size() > VECTOR_LIMIT) this.vectors.clear();
+        final Optional<Pack> optPack = getRefFromTraversedChunks(chunkPos);
+        final Pack pack = optPack.isEmpty() ? new Pack(chunkPos) : optPack.get();
+        final int counts = addOrInc(pack, curr, optPack.isEmpty());
         removeOutsiders();
+
+        //debug only
+        System.out.println(curr.getX() + ":" + curr.getY() + ":" + curr.getZ() + " Counts: "
+                + counts + " Size: " + getVectorCount());
     }
 
     /**
      * Call only after tick.
      */
     public void printCurrent() {
-        BetterBlockPos playerPos = getCurrent();
-        if (isSet(playerPos) && this.vectors.size() > 0) {
-            System.out.println(playerPos.getX() + ":" + playerPos.getY() + ":" + playerPos.getZ() + " Counts: "
-                    + this.vectors.get(getOrigRef(playerPos)).crossings + " Size: " + this.vectors.size());
-        }
     }
 
     private static boolean isSet(final Object o) {
@@ -160,11 +148,10 @@ public final class Snake {
 
     private class Pack {
         public Pack(final ChunkPos chunkPos) {
-            this.crossings = 1;
             this.chunkPos = chunkPos;
+            this.crossings = new HashMap<>();
         }
-
         public ChunkPos chunkPos;
-        public int crossings;
+        public Map<BetterBlockPos, Integer> crossings;
     }
 }
