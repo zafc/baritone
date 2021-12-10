@@ -17,7 +17,7 @@ public final class Trail {
     private BetterBlockPos prev;
     private final IPlayerContext player;
     private final static int VECTOR_LIMIT = 350;
-    private final static int CROSS_LIMIT = 20;
+    private final static int CROSS_LIMIT = 10;
     private final static int CHUNK_TAIL_MAX = 4*4;
 
     public Trail() {
@@ -78,6 +78,12 @@ public final class Trail {
 
     public boolean isRunAwayActive() {
         return pathing;
+    }
+
+    public boolean isInGoal() {
+        final BetterBlockPos curr = getCurrent();
+        if (targetPos == null) return false;
+        return curr.closerThan(targetPos, 3d);
     }
 
     public PathingCommand getRunAwayCommand() {

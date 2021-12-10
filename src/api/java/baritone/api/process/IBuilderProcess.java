@@ -96,6 +96,8 @@ public interface IBuilderProcess extends IBaritoneProcess {
 
     void setAboveBreak(final BlockPos pos);
 
+    void setAbovePlace(final BlockPos pos);
+
     BlockPos getAboveBreak();
 
     boolean clearState();
@@ -112,5 +114,7 @@ public interface IBuilderProcess extends IBaritoneProcess {
 
     boolean isPausedBecauseOfMissingMaterials();
 
+    //void incNoPathToIncorrectTicks();
 
+    void setIncTick();
 }

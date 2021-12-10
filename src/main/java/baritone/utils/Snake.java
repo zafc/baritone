@@ -12,6 +12,11 @@ import net.minecraft.world.level.ChunkPos;
 
 import java.util.*;
 
+@SuppressWarnings("ALL")
+@Deprecated
+/**
+ * Not used because Trail.java is better
+ */
 public final class Snake {
     private final Map<BetterBlockPos, Pack> vectors;
     private final Queue<Pack> traversedChunks;

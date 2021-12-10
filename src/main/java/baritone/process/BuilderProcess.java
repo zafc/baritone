@@ -197,6 +197,11 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
     }
 
     @Override
+    public void setIncTick() {
+
+    }
+
+    @Override
     public Vec3i getSchemSize() {
         return schemSize;
     }
@@ -313,10 +318,10 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         return true;
     }
 
-     @Override
+    @Override
     public void build(String name, ISchematic schematic, Vec3i origin, boolean fromAltoclef) {
         this.build(name, schematic, origin);
-         this.fromAltoclef = fromAltoclef;
+        this.fromAltoclef = fromAltoclef;
     }
 
     @Override
@@ -485,7 +490,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
     private Optional<Placement> searchForPlacables(BuilderCalculationContext bcc, List<BlockState> desirableOnHotbar) {
         BetterBlockPos center = ctx.playerFeet();
         for (int dx = -5; dx <= 5; dx++) {
-            for (int dy = -5; dy <= 1; dy++) {
+            for (int dy = -5; dy <= 3; dy++) {
                 for (int dz = -5; dz <= 5; dz++) {
                     int x = center.x + dx;
                     int y = center.y + dy;
@@ -512,6 +517,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
     }
 
     public boolean placementPlausible(BlockPos pos, BlockState state) {
+        if (state == null) return false;
         VoxelShape voxelshape = state.getCollisionShape(ctx.world(), pos);
         return voxelshape.isEmpty() || ctx.world().isUnobstructed(null, voxelshape.move(pos.getX(), pos.getY(), pos.getZ()));
     }
@@ -1156,6 +1162,11 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
     @Override
     public void setAboveBreak(BlockPos pos) {
         this.aboveBreak = pos;
+    }
+
+    @Override
+    public void setAbovePlace(BlockPos pos) {
+
     }
 
     @Override
