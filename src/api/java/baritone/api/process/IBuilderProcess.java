@@ -117,4 +117,6 @@ public interface IBuilderProcess extends IBaritoneProcess {
     //void incNoPathToIncorrectTicks();
 
     void setIncTick();
+
+    void popStack();
 }

@@ -53,7 +53,7 @@ public interface ICustomGoalProcess extends IBaritoneProcess {
      *
      * @return true if already active, else false
      */
-    boolean activateRunAway();
+    boolean reactivateRunAway();
 
     boolean isRunAwayActive();
 }

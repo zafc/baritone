@@ -1,4 +1,4 @@
-package baritone.utils;
+package baritone.api.utils;
 
 import baritone.api.utils.BetterBlockPos;
 

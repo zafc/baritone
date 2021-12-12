@@ -8,6 +8,7 @@ import baritone.api.process.PathingCommand;
 import baritone.api.process.PathingCommandType;
 import baritone.api.utils.BetterBlockPos;
 import baritone.api.utils.IPlayerContext;
+import baritone.api.utils.RandomSpotNearby;
 import net.minecraft.world.level.ChunkPos;
 
 import java.util.*;

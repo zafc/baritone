@@ -85,9 +85,9 @@ public final class CustomGoalProcess extends BaritoneProcessHelper implements IC
     }
 
     @Override
-    public boolean activateRunAway() {
+    public boolean reactivateRunAway() {
         ensureSnake();
-        return this.snake.activateRunAway();
+        return this.snake.reactivateRunAway();
     }
 
     @Override

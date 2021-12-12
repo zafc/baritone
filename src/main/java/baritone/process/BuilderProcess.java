@@ -99,6 +99,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
     private boolean pausedBecauseOfMissingMaterials = false;
     private final Map<BlockState, Integer> protectedItems = new HashMap<>();
     private Trail snake;
+    private Map<BlockState, Integer> sbtMissing;
 
     public BuilderProcess(Baritone baritone) {
         super(baritone);
@@ -228,7 +229,13 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         //stateStack.push(this.protectedItems);
     }
 
-    private void popStack() {
+    @Override
+    public void popStack() {
+        if (this.stateStack.isEmpty()) {
+            logDebug("ERROR in BuildProcess: No state present to pop");
+            return;
+        }
+
         //this.protectedItems = (Map<BlockState, Integer>) stateStack.pop();
         this.pausedBecauseOfMissingMaterials = (boolean) stateStack.pop();
         this.fromAltoclef = (boolean) stateStack.pop();
@@ -365,7 +372,13 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
 
     @Override
     public Map<BlockState, Integer> getMissing() {
-        return (this.fromAltoclef) ? new HashMap<>(this.missing) : null;
+        if (this.sbtMissing == null) this.sbtMissing = new HashMap<>();
+        if (this.fromAltoclef && this.missing != null) {
+            this.sbtMissing.clear();
+            this.sbtMissing.putAll(this.missing);
+        }
+        return new HashMap<>(this.sbtMissing);
+        //return (this.fromAltoclef) ? new HashMap<>(this.missing) : null;
     }
 
     @Override
@@ -490,7 +503,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
     private Optional<Placement> searchForPlacables(BuilderCalculationContext bcc, List<BlockState> desirableOnHotbar) {
         BetterBlockPos center = ctx.playerFeet();
         for (int dx = -5; dx <= 5; dx++) {
-            for (int dy = -5; dy <= 3; dy++) {
+            for (int dy = -5; dy <= 3; dy++) { // maybe do dy <= 5 because range seems like to be 5
                 for (int dz = -5; dz <= 5; dz++) {
                     int x = center.x + dx;
                     int y = center.y + dy;

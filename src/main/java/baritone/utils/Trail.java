@@ -8,6 +8,7 @@ import baritone.api.process.PathingCommand;
 import baritone.api.process.PathingCommandType;
 import baritone.api.utils.BetterBlockPos;
 import baritone.api.utils.IPlayerContext;
+import baritone.api.utils.RandomSpotNearby;
 import net.minecraft.world.level.ChunkPos;
 
 import java.util.*;
@@ -70,10 +71,13 @@ public final class Trail {
     private RandomSpotNearby randSpot = new RandomSpotNearby(16d);
     private BetterBlockPos targetPos;
 
-    public boolean activateRunAway() {
-        final boolean old = pathing;
+    public boolean reactivateRunAway() {
+        final BetterBlockPos pos = getCurrent();
+        if (isNull(pos)) return false;
+        stuckPos = pos;
+        targetPos = randSpot.next(stuckPos);
         pathing = true;
-        return old;
+        return true;
     }
 
     public boolean isRunAwayActive() {
@@ -91,9 +95,7 @@ public final class Trail {
         if (isNull(curr)) return null;
 
         if (!pathing) {
-            stuckPos = getCurrent();
-            targetPos = randSpot.next(stuckPos);
-            pathing = true;
+            reactivateRunAway();
         }
 
         if (curr.closerThan(targetPos, 3d)) {
