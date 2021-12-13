@@ -9,6 +9,7 @@ import baritone.api.process.PathingCommandType;
 import baritone.api.utils.BetterBlockPos;
 import baritone.api.utils.IPlayerContext;
 import baritone.api.utils.RandomSpotNearby;
+import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.ChunkPos;
 
 import java.util.*;
@@ -20,10 +21,15 @@ public final class Trail {
     private final static int VECTOR_LIMIT = 350;
     private final static int CROSS_LIMIT = 10;
     private final static int CHUNK_TAIL_MAX = 4*4;
+    private final static Trail trail = new Trail();
 
     public Trail() {
         this.player = BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext();
         this.traversedChunks = new ArrayDeque<>();
+    }
+
+    public static final Trail getInstance() {
+        return trail;
     }
 
     private boolean equalPos(final BetterBlockPos pos1, final BetterBlockPos pos2) {
@@ -57,6 +63,7 @@ public final class Trail {
         prev = null;
         pathing = false;
         stuckPos = null;
+        System.out.println("target null");
         targetPos = null;
     }
 
@@ -75,6 +82,7 @@ public final class Trail {
         final BetterBlockPos pos = getCurrent();
         if (isNull(pos)) return false;
         stuckPos = pos;
+        System.out.println("target set");
         targetPos = randSpot.next(stuckPos);
         pathing = true;
         return true;
@@ -84,24 +92,53 @@ public final class Trail {
         return pathing;
     }
 
+    /*
     public boolean isInGoal() {
         final BetterBlockPos curr = getCurrent();
         if (targetPos == null) return false;
         return curr.closerThan(targetPos, 3d);
-    }
+    }*/
 
-    public PathingCommand getRunAwayCommand() {
+    public boolean updateAndCheck() {
+        tick();
+
+        if (!passedLimits()) {
+            return false;
+        }
+
         final BetterBlockPos curr = getCurrent();
-        if (isNull(curr)) return null;
+        if (isNull(curr)) return false;
 
+        //if (targetPos != null)
+        //System.out.println("is in target: " + curr.closerThan(targetPos, 3d));
+        if (targetPos != null && curr.closerThan(new Vec3i(targetPos.getX(), curr.getY(), targetPos.getZ()), 3d)) {
+            reset();
+            return false;
+        }
         if (!pathing) {
             reactivateRunAway();
         }
 
-        if (curr.closerThan(targetPos, 3d)) {
+        return true;
+    }
+
+    public PathingCommand getRunAwayCommand() {
+        /*final BetterBlockPos curr = getCurrent();
+        if (isNull(curr)) return null;
+
+        if (targetPos != null && curr.closerThan(targetPos, 3d)) {
             reset();
             return null;
         }
+
+        if (!pathing) {
+            reactivateRunAway();
+        }*/
+
+        if (targetPos == null) {
+            throw new IllegalStateException("targetPos is null");
+        }
+
         return new PathingCommand(new GoalXZ(targetPos), PathingCommandType.FORCE_REVALIDATE_GOAL_AND_PATH);
     }
 
@@ -114,6 +151,8 @@ public final class Trail {
         return counter;
     }
 
+
+    //TODO tick() may be called multiple times in one tick. This shouldn't be limited to one possible update per tick.
     public void tick() {
         final BetterBlockPos curr = getCurrent();
         if (isNull(curr) || equalPos(prev, curr)) return;

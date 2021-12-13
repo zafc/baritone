@@ -206,11 +206,11 @@ public class AltoClefSettings {
         return _protectedItems;
     }
     public void protectItem(Item item) {
-        System.out.println("SET PROTECTION " + item.toString());
+        //System.out.println("SET PROTECTION " + item.toString());
         _protectedItems.add(item);
     }
     public void stopProtectingItem(Item item) {
-        System.out.println("UNSET PROTECTION " + item.toString());
+        //System.out.println("UNSET PROTECTION " + item.toString());
         _protectedItems.remove(item);
     }
 

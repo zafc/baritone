@@ -34,15 +34,15 @@ import baritone.api.schematic.FillSchematic;
 import baritone.api.schematic.ISchematic;
 import baritone.api.schematic.IStaticSchematic;
 import baritone.api.schematic.format.ISchematicFormat;
-import baritone.api.utils.BetterBlockPos;
-import baritone.api.utils.RayTraceUtils;
+import baritone.api.utils.*;
 import baritone.api.utils.Rotation;
-import baritone.api.utils.RotationUtils;
 import baritone.api.utils.input.Input;
 import baritone.behavior.PathingBehavior;
 import baritone.pathing.movement.CalculationContext;
 import baritone.pathing.movement.Movement;
 import baritone.pathing.movement.MovementHelper;
+import baritone.pathing.movement.MovementState;
+import baritone.pathing.movement.movements.MovementTraverse;
 import baritone.pathing.path.PathExecutor;
 import baritone.utils.*;
 import baritone.utils.schematic.MapArtSchematic;
@@ -98,7 +98,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
     private long recalcCounter = 0;
     private boolean pausedBecauseOfMissingMaterials = false;
     private final Map<BlockState, Integer> protectedItems = new HashMap<>();
-    private Trail snake;
+    //private Trail snake;
     private Map<BlockState, Integer> sbtMissing;
 
     public BuilderProcess(Baritone baritone) {
@@ -698,12 +698,25 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
 
     @Override
     public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
-        if (snake == null) snake = new Trail();
+        /*if (snake == null) snake = new Trail();
         snake.tick();
         if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
             return snake.getRunAwayCommand();
         }
-        snake.printCurrent();
+        snake.printCurrent();*/
+
+        //final Trail trail = Trail.getInstance();
+        /*trail.tick();
+        if (trail.passedLimits()) {
+            final PathingCommand command = trail.getRunAwayCommand();
+            if (command != null) {
+                return trail.getRunAwayCommand();
+            }
+        }*/
+
+        if (Trail.getInstance().updateAndCheck()) {
+            return Trail.getInstance().getRunAwayCommand();
+        }
 
         protectItemOfMissing();
         //if (!Baritone.getAltoClefSettings().isItemProtected(Items.DIRT))
@@ -911,9 +924,23 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
             }
         }
         //System.out.println("big goal");
+
+        updateMovement();
+
         return new PathingCommandContext(goal, PathingCommandType.FORCE_REVALIDATE_GOAL_AND_PATH, bcc);
     }
 
+    private void updateMovement() {
+        //MovementHelper.isDoorPassable(ctx, new BlockPos(0,0,0), new BlockPos(0,0,0));
+        //BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().
+
+        PathExecutor exec = baritone.getPathingBehavior().getCurrent();
+        if (exec == null || exec.finished() || exec.failed()) {
+            return;
+        }
+        Movement movement = (Movement) exec.getPath().movements().get(exec.getPosition());
+        movement.update();
+    }
 
 /*
     public boolean assumingStuckOnPathing() {
@@ -1024,11 +1051,14 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         incorrectPositions.forEach(pos -> {
             BlockState state = bcc.bsi.get0(pos);
             if (state.getBlock() instanceof AirBlock) {
-                if (approxPlaceable.contains(bcc.getSchematic(pos.x, pos.y, pos.z, state))) {
+                if (approxPlaceable.contains(bcc.getSchematic(pos.x, pos.y, pos.z, state)) || approxPlaceable.stream().anyMatch(e -> e != null && !(e.getBlock() instanceof AirBlock) && e.getBlock().getClass().equals(state.getBlock().getClass()))) {
                     placeable.add(pos);
+                    //if (state != null && state.getBlock() != null)
+                    //System.out.println("placeable: " + state.getBlock().getClass().getCanonicalName());
                 } else {
                     BlockState desired = bcc.getSchematic(pos.x, pos.y, pos.z, state);
                     if (desired != null) {
+                        //System.out.println("missing: " + desired);
                         missing.put(desired, 1 + missing.getOrDefault(desired, 0));
                     }
                 }
@@ -1314,13 +1344,42 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         if (desired.getBlock() instanceof SlabBlock) {
             return true;
         }
+
+        /*MovementHelper.isDoorPassable(ctx, new BlockPos(0,0,0), new BlockPos(0,0,0));
+                if (pb0.getBlock() instanceof DoorBlock || pb1.getBlock() instanceof DoorBlock) {
+            boolean notPassable = pb0.getBlock() instanceof DoorBlock && !MovementHelper.isDoorPassable(ctx, src, dest) || pb1.getBlock() instanceof DoorBlock && !MovementHelper.isDoorPassable(ctx, dest, src);
+            boolean canOpen = !(Blocks.IRON_DOOR.equals(pb0.getBlock()) || Blocks.IRON_DOOR.equals(pb1.getBlock()));
+
+            if (notPassable && canOpen) {
+                return state.setTarget(new MovementState.MovementTarget(RotationUtils.calcRotationFromVec3d(ctx.playerHead(), VecUtils.calculateBlockCenter(ctx.world(), positionsToBreak[0]), ctx.playerRotations()), true))
+                        .setInput(Input.CLICK_RIGHT, true);
+            }
+        }
+
+        if (pb0.getBlock() instanceof FenceGateBlock || pb1.getBlock() instanceof FenceGateBlock) {
+            BlockPos blocked = !MovementHelper.isGatePassable(ctx, positionsToBreak[0], src.above()) ? positionsToBreak[0]
+                    : !MovementHelper.isGatePassable(ctx, positionsToBreak[1], src) ? positionsToBreak[1]
+                    : null;
+            if (blocked != null) {
+                Optional<Rotation> rotation = RotationUtils.reachable(ctx, blocked);
+                if (rotation.isPresent()) {
+                    return state.setTarget(new MovementState.MovementTarget(rotation.get(), true)).setInput(Input.CLICK_RIGHT, true);
+                }
+            }
+        }
+        * */
+
+
+        if (current.getBlock() instanceof ChestBlock && desired.getBlock() instanceof ChestBlock) {
+            return true;
+        }
         if (current.getBlock().defaultBlockState().equals(desired.getBlock().defaultBlockState())) {
             if (current.getBlock() instanceof CrossCollisionBlock) {
                 return true;
             }
-            if (desired.getBlock() instanceof ChestBlock) {
+            /*if (desired.getBlock() instanceof ChestBlock) {
                 return true;
-            }
+            }*/
             if (desired.getBlock() instanceof DoorBlock) {
                 return true;
             }

@@ -48,7 +48,7 @@ public final class ExploreProcess extends BaritoneProcessHelper implements IExpl
     private BlockPos explorationOrigin;
     private IChunkFilter filter;
     private int distanceCompleted;
-    private Trail snake;
+    //private Trail snake;
 
     public ExploreProcess(Baritone baritone) {
         super(baritone);
@@ -82,12 +82,16 @@ public final class ExploreProcess extends BaritoneProcessHelper implements IExpl
 
     @Override
     public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
-        if (snake == null) snake = new Trail();
+        /*if (snake == null) snake = new Trail();
         snake.tick();
         if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
             return snake.getRunAwayCommand();
         }
-        snake.printCurrent();
+        snake.printCurrent();*/
+
+        if (Trail.getInstance().updateAndCheck()) {
+            return Trail.getInstance().getRunAwayCommand();
+        }
 
         if (calcFailed) {
             logDirect("Failed");

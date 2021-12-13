@@ -61,7 +61,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
     private GoalRunAway branchPointRunaway;
     private int desiredQuantity;
     private int tickCount;
-    private Trail snake;
+    //private Trail snake;
 
     public MineProcess(Baritone baritone) {
         super(baritone);
@@ -74,12 +74,16 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
 
     @Override
     public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
-        if (snake == null) snake = new Trail();
+        /*if (snake == null) snake = new Trail();
         snake.tick();
         if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
             return snake.getRunAwayCommand();
         }
-        snake.printCurrent();
+        snake.printCurrent();*/
+
+        if (Trail.getInstance().updateAndCheck()) {
+            return Trail.getInstance().getRunAwayCommand();
+        }
 
         if (desiredQuantity > 0) {
             int curr = ctx.player().getInventory().items.stream()

@@ -48,7 +48,7 @@ public final class GetToBlockProcess extends BaritoneProcessHelper implements IG
 
     private int tickCount = 0;
     private int arrivalTickCount = 0;
-    private Trail snake;
+    //private Trail snake;
 
     public GetToBlockProcess(Baritone baritone) {
         super(baritone);
@@ -71,12 +71,16 @@ public final class GetToBlockProcess extends BaritoneProcessHelper implements IG
 
     @Override
     public synchronized PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
-        if (snake == null) snake = new Trail();
+        /*if (snake == null) snake = new Trail();
         snake.tick();
         if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
             return snake.getRunAwayCommand();
         }
-        snake.printCurrent();
+        snake.printCurrent();*/
+
+        if (Trail.getInstance().updateAndCheck()) {
+            return Trail.getInstance().getRunAwayCommand();
+        }
 
         if (knownLocations == null) {
             rescan(new ArrayList<>(), new CalculationContext(baritone));
