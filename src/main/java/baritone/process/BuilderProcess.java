@@ -62,14 +62,18 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static baritone.api.pathing.movement.ActionCosts.COST_INF;
@@ -1039,7 +1043,79 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         return assemble(bcc, approxPlaceable, false);
     }
 
-    //private BlockPos specialBreak = null;
+    private final class PropertyContainer {
+        private final String propertyKey;
+        private final String propertyValue;
+
+        public PropertyContainer(final String propertyKey, final String propertyValue) {
+            this.propertyKey = propertyKey;
+            this.propertyValue = propertyValue;
+        }
+
+        public String getPropertyKey() {
+            return this.propertyKey;
+        }
+
+        public String getPropertyValue() {
+            return this.propertyValue;
+        }
+    }
+
+    private final Function<Map.Entry<Property<?>, Comparable<?>>, PropertyContainer> PROPERTY_ENTRY_TO_STRING_FUNCTION = new Function<>() {
+        public PropertyContainer apply(@Nullable Map.Entry<Property<?>, Comparable<?>> entry) {
+            if (entry == null) {
+                return null;
+            } else {
+                Property<?> property = (Property) entry.getKey();
+                String var10000 = property.getName();
+                final PropertyContainer propertyContainer = new PropertyContainer(var10000, this.getName(property, (Comparable) entry.getValue()));
+                return propertyContainer;
+                //return var10000 + "=" + this.getName(property, (Comparable) entry.getValue());
+            }
+        }
+
+        private <T extends Comparable<T>> String getName(Property<T> property, Comparable<?> comparable) {
+            return property.getName((T) comparable);
+        }
+    };
+
+    private boolean isDefaultState(final BlockState state) {
+        //final PropertyContainer propertyContainer = new PropertyContainer(var10000, this.getName(property, (Comparable) entry.getValue()));
+        //final String s = state.getValues().entrySet().stream().map(PROPERTY_ENTRY_TO_STRING_FUNCTION).collect(Collectors.joining(","));
+        //System.out.println(s);
+
+        final List<PropertyContainer> propertyContainers = state.getValues().entrySet().stream().map(PROPERTY_ENTRY_TO_STRING_FUNCTION).collect(Collectors.toList());
+        for (final PropertyContainer container : propertyContainers) {
+            if (container.propertyKey.equals("part") && container.propertyValue.equals("head")) {
+                return false;
+            }
+            if (container.propertyKey.equals("half") && container.propertyValue.equals("upper")) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean inInventoryWithUnderDifferentProperties(final BlockState state) {
+        final List<PropertyContainer> propertyContainers = state.getValues().entrySet().stream().map(PROPERTY_ENTRY_TO_STRING_FUNCTION).collect(Collectors.toList());
+        for (final PropertyContainer container : propertyContainers) {
+
+        }
+
+        return false;
+    }
+
+    private final List<BlockState> asInventoryList(final List<BlockState> placeables) {
+        final List<BlockState> invStates = new ArrayList<>();
+        placeables.forEach(e -> {
+            final BlockState defaultState = e.getBlock().defaultBlockState();
+            invStates.removeIf(a -> a.toString().equals(defaultState.toString()));
+            invStates.add(defaultState);
+        });
+
+        return invStates;
+    }
 
     private Goal assemble(BuilderCalculationContext bcc, List<BlockState> approxPlaceable, boolean logMissing) {
         List<BetterBlockPos> placeable = new ArrayList<>();
@@ -1051,15 +1127,29 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         incorrectPositions.forEach(pos -> {
             BlockState state = bcc.bsi.get0(pos);
             if (state.getBlock() instanceof AirBlock) {
-                if (approxPlaceable.contains(bcc.getSchematic(pos.x, pos.y, pos.z, state)) || approxPlaceable.stream().anyMatch(e -> e != null && !(e.getBlock() instanceof AirBlock) && e.getBlock().getClass().equals(state.getBlock().getClass()))) {
-                    placeable.add(pos);
+                //state.getValues().entrySet().forEach(e -> e.);
+                final BlockState bsSchematic = bcc.getSchematic(pos.x, pos.y, pos.z, state);
+                /*hasNonHoldable(bsSchematic);
+                System.out.println("-----------");
+                hasNonHoldable(state);*/
+                //System.out.println("From bar: " + bsSchematic.getBlock().defaultBlockState());
+                //if (approxPlaceable.contains(bsSchematic.getBlock().defaultBlockState())// &&
+                //if (approxPlaceable.stream().anyMatch(e -> e.getBlock().defaultBlockState().toString().equals(bsSchematic.getBlock().defaultBlockState().toString()))
+                if (approxPlaceable.stream().anyMatch(e -> e != null && e.getBlock().defaultBlockState().equals(bsSchematic.getBlock().defaultBlockState()))
+
+                    //|| approxPlaceable.stream().anyMatch(e -> e != null && !(e.getBlock() instanceof AirBlock) && e.getBlock().getClass().equals(state.getBlock().getClass()))
+                        //&& !hasNonHoldable(state)
+                ) {
+                    if (isDefaultState(bsSchematic)) {
+                        placeable.add(pos);
+                    }
                     //if (state != null && state.getBlock() != null)
                     //System.out.println("placeable: " + state.getBlock().getClass().getCanonicalName());
                 } else {
                     BlockState desired = bcc.getSchematic(pos.x, pos.y, pos.z, state);
                     if (desired != null) {
                         //System.out.println("missing: " + desired);
-                        missing.put(desired, 1 + missing.getOrDefault(desired, 0));
+                        missing.put(desired.getBlock().defaultBlockState(), 1 + missing.getOrDefault(desired, 0));
                     }
                 }
             } else {
@@ -1077,6 +1167,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
                 }
             }
         });
+
         List<Goal> toBreak = new ArrayList<>();
         breakable.forEach(pos -> toBreak.add(breakGoal(pos, bcc)));
 
@@ -1312,7 +1403,15 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
                 continue;
             }
             // <toxic cloud>
-            result.add(((BlockItem) stack.getItem()).getBlock().getStateForPlacement(new BlockPlaceContext(new UseOnContext(ctx.world(), ctx.player(), InteractionHand.MAIN_HAND, stack, new BlockHitResult(new Vec3(ctx.player().position().x, ctx.player().position().y, ctx.player().position().z), Direction.UP, ctx.playerFeet(), false)) {})));
+            final Vec3 playerPos = new Vec3(ctx.player().position().x, ctx.player().position().y, ctx.player().position().z);
+            final BlockHitResult playerFeetHitResult = new BlockHitResult(playerPos, Direction.UP, ctx.playerFeet(), false);
+            final UseOnContext usageMainHandAction = new UseOnContext(ctx.world(), ctx.player(), InteractionHand.MAIN_HAND, stack, playerFeetHitResult) {};
+            final BlockPlaceContext blockPlacementContext = new BlockPlaceContext(usageMainHandAction);
+            final Block targetBlock = ((BlockItem) stack.getItem()).getBlock();
+            final BlockState targetState = targetBlock.getStateForPlacement(blockPlacementContext);
+            result.add(targetState);
+            //result.add(((BlockItem) stack.getItem()).getBlock().getStateForPlacement(new BlockPlaceContext(new UseOnContext(ctx.world(), ctx.player(), InteractionHand.MAIN_HAND, stack, new BlockHitResult(new Vec3(ctx.player().position().x, ctx.player().position().y, ctx.player().position().z), Direction.UP, ctx.playerFeet(), false)) {})));
+
             // </toxic cloud>
         }
         return result;
@@ -1373,6 +1472,9 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         if (current.getBlock() instanceof ChestBlock && desired.getBlock() instanceof ChestBlock) {
             return true;
         }
+        if (current.getBlock() instanceof DoorBlock && desired.getBlock() instanceof DoorBlock) {
+            return true;
+        }
         if (current.getBlock().defaultBlockState().equals(desired.getBlock().defaultBlockState())) {
             if (current.getBlock() instanceof CrossCollisionBlock) {
                 return true;
@@ -1380,9 +1482,9 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
             /*if (desired.getBlock() instanceof ChestBlock) {
                 return true;
             }*/
-            if (desired.getBlock() instanceof DoorBlock) {
+            /*if (desired.getBlock() instanceof DoorBlock) {
                 return true;
-            }
+            }*/
         }
 
         /*
