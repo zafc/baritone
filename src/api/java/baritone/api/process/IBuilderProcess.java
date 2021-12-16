@@ -94,29 +94,9 @@ public interface IBuilderProcess extends IBaritoneProcess {
 
     void reset();
 
-    void setAboveBreak(final BlockPos pos);
-
-    void setAbovePlace(final BlockPos pos);
-
-    BlockPos getAboveBreak();
-
     boolean clearState();
 
-    void addBlockToIgnoreInSchematic(final BlockPos pos);
-
-    void removeBlockToIgnoreInSchematic(final BlockPos pos);
-
-    void clearBlocksToIgnoreInSchematic();
-
-    void decideToIgnoreInSchematic(BetterBlockPos positionToPlace);
-
     void noteInsert(final BlockPos pos);
-
-    boolean isPausedBecauseOfMissingMaterials();
-
-    //void incNoPathToIncorrectTicks();
-
-    void setIncTick();
 
     void popStack();
 }
