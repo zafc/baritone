@@ -18,6 +18,7 @@
 package baritone.pathing.movement;
 
 import baritone.Baritone;
+import baritone.altoclef.AltoClefSettings;
 import baritone.api.BaritoneAPI;
 import baritone.api.IBaritone;
 import baritone.api.pathing.movement.ActionCosts;
@@ -57,7 +58,7 @@ import static baritone.pathing.movement.Movement.HORIZONTALS_BUT_ALSO_DOWN_____S
 public interface MovementHelper extends ActionCosts, Helper {
 
     static boolean avoidBreaking(BlockStateInterface bsi, int x, int y, int z, BlockState state) {
-        if (Baritone.getAltoClefSettings().shouldAvoidBreaking(new BlockPos(x, y, z))) return true;
+        if (AltoClefSettings.getInstance().shouldAvoidBreaking(new BlockPos(x, y, z))) return true;
         Block b = state.getBlock();
         return b == Blocks.ICE // ice becomes water, and water can mess up the path
                 || b instanceof InfestedBlock // obvious reasons
@@ -101,7 +102,7 @@ public interface MovementHelper extends ActionCosts, Helper {
         if (block instanceof BaseFireBlock || block == Blocks.TRIPWIRE || block == Blocks.COBWEB || block == Blocks.END_PORTAL || block == Blocks.COCOA || block instanceof AbstractSkullBlock || block == Blocks.BUBBLE_COLUMN || block instanceof ShulkerBoxBlock || block instanceof SlabBlock || block instanceof TrapDoorBlock || block == Blocks.HONEY_BLOCK || block == Blocks.END_ROD || block == Blocks.POINTED_DRIPSTONE || block == Blocks.AMETHYST_CLUSTER || block == Blocks.SWEET_BERRY_BUSH) {
             return false;
         }
-        if (Baritone.getAltoClefSettings().canSwimThroughLava() && block == Blocks.LAVA) {
+        if (AltoClefSettings.getInstance().canSwimThroughLava() && block == Blocks.LAVA) {
             BlockState up = bsi.get0(x, y + 1, z);
             return up.getFluidState().isEmpty();
         }
@@ -308,7 +309,7 @@ public interface MovementHelper extends ActionCosts, Helper {
      */
     static boolean canWalkOn(BlockStateInterface bsi, int x, int y, int z, BlockState state) {
         Block block = state.getBlock();
-        if (Baritone.getAltoClefSettings().canWalkOnForce(x, y, z)) return true;
+        if (AltoClefSettings.getInstance().canWalkOnForce(x, y, z)) return true;
         if (block instanceof AirBlock || block == Blocks.MAGMA_BLOCK || block == Blocks.BUBBLE_COLUMN || block == Blocks.HONEY_BLOCK) {
             // early return for most common case (air)
             // plus magma, which is a normal cube but it hurts you
@@ -390,7 +391,7 @@ public interface MovementHelper extends ActionCosts, Helper {
     }
 
     static boolean canPlaceAgainst(BlockStateInterface bsi, int x, int y, int z, BlockState state) {
-        if (Baritone.getAltoClefSettings().shouldAvoidPlacingAt(x, y, z)) return false;
+        if (AltoClefSettings.getInstance().shouldAvoidPlacingAt(x, y, z)) return false;
         // can we look at the center of a side face of this block and likely be able to place?
         // (thats how this check is used)
         // therefore dont include weird things that we technically could place against (like carpet) but practically can't
@@ -418,7 +419,7 @@ public interface MovementHelper extends ActionCosts, Helper {
             if (strVsBlock <= 0) {
                 return COST_INF;
             }
-            if (Baritone.getAltoClefSettings().shouldAvoidBreaking(x, y, z)) {
+            if (AltoClefSettings.getInstance().shouldAvoidBreaking(x, y, z)) {
                 return COST_INF;
             }
             double result = 1 / strVsBlock;
@@ -458,7 +459,7 @@ public interface MovementHelper extends ActionCosts, Helper {
      * @param ts  previously calculated ToolSet
      */
     static void switchToBestToolFor(IPlayerContext ctx, BlockState b, ToolSet ts, boolean preferSilkTouch) {
-        if (Baritone.getAltoClefSettings().isInteractionPaused()) return;
+        if (AltoClefSettings.getInstance().isInteractionPaused()) return;
         if (!Baritone.settings().disableAutoTool.value && !Baritone.settings().assumeExternalAutoTool.value) {
             ctx.player().getInventory().selected = ts.getBestSlot(b.getBlock(), preferSilkTouch);
         }
@@ -485,7 +486,7 @@ public interface MovementHelper extends ActionCosts, Helper {
         if (f == Fluids.WATER || f == Fluids.FLOWING_WATER) {
             return true;
         }
-        if (f == Fluids.LAVA || f == Fluids.FLOWING_LAVA && Baritone.getAltoClefSettings().canSwimThroughLava()) {
+        if (f == Fluids.LAVA || f == Fluids.FLOWING_LAVA && AltoClefSettings.getInstance().canSwimThroughLava()) {
             return true;
         }
         return false;

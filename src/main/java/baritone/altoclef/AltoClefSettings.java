@@ -25,15 +25,24 @@ import net.minecraft.world.item.ItemStack;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 public class AltoClefSettings {
 
+    // woo singletons
+    private static AltoClefSettings _instance = new AltoClefSettings();
+    public static AltoClefSettings getInstance() {
+        return _instance;
+    }
+
     private final Object breakMutex = new Object();
     private final Object placeMutex = new Object();
 
     private final Object propertiesMutex = new Object();
+
+    private final Object globalHeuristicMutex = new Object();
 
     private final HashSet<BlockPos> _blocksToAvoidBreaking = new HashSet<>();
     private final List<Predicate<BlockPos>> _breakAvoiders = new ArrayList<>();
@@ -43,6 +52,8 @@ public class AltoClefSettings {
     private final List<Predicate<BlockPos>> _forceCanWalkOn = new ArrayList<>();
 
     private final List<BiPredicate<BlockState, ItemStack>> _forceUseTool = new ArrayList<>();
+
+    private final List<BiFunction<Double, BlockPos, Double>> _globalHeuristics = new ArrayList<>();
 
     private final HashSet<Item> _protectedItems = new HashSet<>();
 
@@ -147,6 +158,19 @@ public class AltoClefSettings {
         }
     }
 
+    public double applyGlobalHeuristic(double prev, int x, int y, int z) {
+        return prev;
+        /*
+        synchronized (globalHeuristicMutex) {
+            BlockPos p = new BlockPos(x, y, z);
+            for (BiFunction<Double, BlockPos, Double> toApply : _globalHeuristics) {
+                prev = toApply.apply(prev, p);
+            }
+        }
+        return prev;
+         */
+    }
+
     public HashSet<BlockPos> getBlocksToAvoidBreaking() {
         return _blocksToAvoidBreaking;
     }
@@ -162,6 +186,7 @@ public class AltoClefSettings {
     public List<BiPredicate<BlockState, ItemStack>> getForceUseToolPredicates() {
         return _forceUseTool;
     }
+    public List<BiFunction<Double, BlockPos, Double>> getGlobalHeuristics() {return _globalHeuristics;}
 
     public boolean isItemProtected(Item item) {
         return _protectedItems.contains(item);
@@ -183,4 +208,5 @@ public class AltoClefSettings {
         return placeMutex;
     }
     public Object getPropertiesMutex() {return propertiesMutex;}
+    public Object getGlobalHeuristicMutex() { return globalHeuristicMutex;}
 }

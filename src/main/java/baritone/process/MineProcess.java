@@ -18,6 +18,7 @@
 package baritone.process;
 
 import baritone.Baritone;
+import baritone.altoclef.AltoClefSettings;
 import baritone.api.pathing.goals.*;
 import baritone.api.process.IMineProcess;
 import baritone.api.process.PathingCommand;
@@ -109,7 +110,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
             return null;
         }
         // Wait for pause interactions
-        if (Baritone.getAltoClefSettings().isInteractionPaused()) {
+        if (AltoClefSettings.getInstance().isInteractionPaused()) {
             return new PathingCommand(null, PathingCommandType.REQUEST_PAUSE);
         }
         updateLoucaSystem();

@@ -18,6 +18,7 @@
 package baritone.pathing.movement;
 
 import baritone.Baritone;
+import baritone.altoclef.AltoClefSettings;
 import baritone.api.IBaritone;
 import baritone.api.pathing.movement.ActionCosts;
 import baritone.cache.WorldData;
@@ -84,11 +85,11 @@ public class CalculationContext {
         this.worldData = (WorldData) baritone.getWorldProvider().getCurrentWorld();
         this.bsi = new BlockStateInterface(world, worldData, forUseOnAnotherThread);
         this.toolSet = new ToolSet(player);
-        this.hasThrowaway = !Baritone.getAltoClefSettings().isInteractionPaused() && Baritone.settings().allowPlace.value && ((Baritone) baritone).getInventoryBehavior().hasGenericThrowaway();
+        this.hasThrowaway = !AltoClefSettings.getInstance().isInteractionPaused() && Baritone.settings().allowPlace.value && ((Baritone) baritone).getInventoryBehavior().hasGenericThrowaway();
         this.hasWaterBucket = Baritone.settings().allowWaterBucketFall.value && Inventory.isHotbarSlot(player.getInventory().findSlotMatchingItem(STACK_BUCKET_WATER)) && world.dimension() != Level.NETHER;
         this.canSprint = Baritone.settings().allowSprint.value && player.getFoodData().getFoodLevel() > 6;
         this.placeBlockCost = Baritone.settings().blockPlacementPenalty.value;
-        this.allowBreak = !Baritone.getAltoClefSettings().isInteractionPaused() && Baritone.settings().allowBreak.value;
+        this.allowBreak = !AltoClefSettings.getInstance().isInteractionPaused() && Baritone.settings().allowBreak.value;
         this.allowParkour = Baritone.settings().allowParkour.value;
         this.allowParkourPlace = Baritone.settings().allowParkourPlace.value;
         this.allowJumpAt256 = Baritone.settings().allowJumpAt256.value;
@@ -146,7 +147,7 @@ public class CalculationContext {
             // TODO perhaps MovementHelper.canPlaceAgainst could also use this?
             return COST_INF;
         }
-        if (Baritone.getAltoClefSettings().shouldAvoidPlacingAt(x, y, z)) {
+        if (AltoClefSettings.getInstance().shouldAvoidPlacingAt(x, y, z)) {
             return COST_INF;
         }
         return placeBlockCost;
@@ -159,7 +160,7 @@ public class CalculationContext {
         if (isPossiblyProtected(x, y, z)) {
             return COST_INF;
         }
-        if (Baritone.getAltoClefSettings().shouldAvoidBreaking(new BlockPos(x, y, z))) {
+        if (AltoClefSettings.getInstance().shouldAvoidBreaking(new BlockPos(x, y, z))) {
             return COST_INF;
         }
         return 1;

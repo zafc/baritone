@@ -21,6 +21,8 @@ import baritone.Baritone;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+
+import baritone.altoclef.AltoClefSettings;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.effect.MobEffects;
@@ -184,7 +186,7 @@ public class ToolSet {
         }
          */
         // We specify to force use this tool.
-        if (Baritone.getAltoClefSettings().shouldForceUseTool(state, item)) {
+        if (AltoClefSettings.getInstance().shouldForceUseTool(state, item)) {
             return Double.POSITIVE_INFINITY;
         }
 
