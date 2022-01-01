@@ -52,8 +52,6 @@ public class AltoClefSettings {
 
     private boolean _dontPlaceBucketButStillFall;
 
-    private boolean _allowShears = true;
-
     private boolean _allowSwimThroughLava = false;
 
     public void avoidBlockBreak(BlockPos pos) {
@@ -126,15 +124,6 @@ public class AltoClefSettings {
             return _allowFlowingWaterPass;
         }
     }
-    /**
-     * @deprecated
-     * Use `shouldForceUseToo` instead.
-     */
-    public boolean areShearsAllowed() {
-        synchronized (propertiesMutex) {
-            return _allowShears;
-        }
-    }
     public boolean canSwimThroughLava() {
         synchronized (propertiesMutex) {
             return _allowSwimThroughLava;
@@ -149,17 +138,6 @@ public class AltoClefSettings {
     public void setFlowingWaterPass(boolean pass) {
         synchronized (propertiesMutex) {
             _allowFlowingWaterPass = pass;
-        }
-    }
-
-    /**
-     * @deprecated
-     * Use `getForceUseToolPredicates` instead.
-     */
-    @Deprecated
-    public void allowShears(boolean allow) {
-        synchronized (propertiesMutex) {
-            _allowShears = allow;
         }
     }
 
