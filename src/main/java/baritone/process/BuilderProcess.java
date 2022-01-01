@@ -44,6 +44,7 @@ import baritone.utils.PathingCommandContext;
 import baritone.utils.schematic.MapArtSchematic;
 import baritone.utils.schematic.SchematicSystem;
 import baritone.utils.schematic.schematica.SchematicaHelper;
+import baritone.altoclef.AltoClefSettings;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -285,6 +286,10 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
             if (MovementHelper.isReplaceable(placeAgainstPos.x, placeAgainstPos.y, placeAgainstPos.z, placeAgainstState, bsi)) {
                 continue;
             }
+            if (placeAgainstState.getBlock() instanceof AirBlock) {
+                // isReplacable used to check for this, but we changed that.
+                continue;
+            }
             if (!toPlace.canSurvive(ctx.world(), new BetterBlockPos(x, y, z))) {
                 continue;
             }
@@ -465,7 +470,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         }
         List<BlockState> desirableOnHotbar = new ArrayList<>();
         Optional<Placement> toPlace = searchForPlacables(bcc, desirableOnHotbar);
-        if (toPlace.isPresent() && isSafeToCancel && ctx.player().isOnGround() && ticks <= 0) {
+        if (!AltoClefSettings.getInstance().isInteractionPaused() && toPlace.isPresent() && isSafeToCancel && ctx.player().isOnGround() && ticks <= 0) {
             Rotation rot = toPlace.get().rot;
             baritone.getLookBehavior().updateTarget(rot, true);
             ctx.player().getInventory().selected = toPlace.get().hotbarSelection;
@@ -476,7 +481,7 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
             return new PathingCommand(null, PathingCommandType.CANCEL_AND_SET_GOAL);
         }
 
-        if (Baritone.settings().allowInventory.value) {
+        if (!AltoClefSettings.getInstance().isInteractionPaused() && Baritone.settings().allowInventory.value) {
             ArrayList<Integer> usefulSlots = new ArrayList<>();
             List<BlockState> noValidHotbarOption = new ArrayList<>();
             outer:
@@ -825,6 +830,9 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
     private boolean valid(BlockState current, BlockState desired, boolean itemVerify) {
         if (desired == null) {
             return true;
+        }
+        if (current == null) {
+            return true; // No idea why but current might be null..... oof
         }
         if (current.getBlock() instanceof LiquidBlock && Baritone.settings().okIfWater.value) {
             return true;

@@ -21,13 +21,18 @@ import baritone.Baritone;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+
+import baritone.altoclef.AltoClefSettings;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
@@ -174,7 +179,23 @@ public class ToolSet {
             }
         }
 
-        speed /= hardness;
+        /*
+        // Shears are fast against items that don't say they're fast.
+        if (item.getItem() == Items.SHEARS && areShearsEffective(state.getBlock())) {
+            return Double.POSITIVE_INFINITY;
+        }
+         */
+        // We specify to force use this tool.
+        if (AltoClefSettings.getInstance().shouldForceUseTool(state, item)) {
+            return Double.POSITIVE_INFINITY;
+        }
+
+        if (hardness != 0.0) {
+            speed /= hardness;
+        } else {
+            speed *= 100000;
+        }
+
         if (!state.requiresCorrectToolForDrops() || (!item.isEmpty() && item.isCorrectToolForDrops(state))) {
             return speed / 30;
         } else {

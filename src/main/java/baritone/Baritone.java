@@ -36,6 +36,7 @@ import baritone.utils.PathingControlManager;
 import baritone.utils.player.PrimaryPlayerContext;
 import net.minecraft.client.Minecraft;
 
+import baritone.altoclef.AltoClefSettings;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
