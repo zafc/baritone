@@ -18,6 +18,7 @@
 package baritone.behavior;
 
 import baritone.Baritone;
+import baritone.api.cache.IWaypoint;
 import baritone.api.cache.Waypoint;
 import baritone.api.event.events.BlockInteractEvent;
 import baritone.api.event.events.PacketEvent;
@@ -25,10 +26,12 @@ import baritone.api.event.events.PlayerUpdateEvent;
 import baritone.api.event.events.TickEvent;
 import baritone.api.event.events.type.EventState;
 import baritone.api.utils.BetterBlockPos;
+import baritone.api.utils.Helper;
 import baritone.cache.ContainerMemory;
 import baritone.utils.BlockStateInterface;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBed;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.Packet;
@@ -40,12 +43,19 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityLockable;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.event.ClickEvent;
+import net.minecraft.util.text.event.HoverEvent;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+
+import static baritone.api.command.IBaritoneChatControl.FORCE_COMMAND_PREFIX;
 
 /**
  * doesn't work for horse inventories :^)
@@ -159,14 +169,44 @@ public final class MemoryBehavior extends Behavior {
 
     @Override
     public void onBlockInteract(BlockInteractEvent event) {
-        if (event.getType() == BlockInteractEvent.Type.USE && BlockStateInterface.getBlock(ctx, event.getPos()) instanceof BlockBed) {
-            baritone.getWorldProvider().getCurrentWorld().getWaypoints().addWaypoint(new Waypoint("bed", Waypoint.Tag.BED, BetterBlockPos.from(event.getPos())));
+        if (event.getType() == BlockInteractEvent.Type.USE) {
+            BetterBlockPos pos = BetterBlockPos.from(event.getPos());
+            IBlockState state = BlockStateInterface.get(ctx, pos);
+            if (state.getBlock() instanceof BlockBed) {
+                if (state.getValue(BlockBed.PART) == BlockBed.EnumPartType.FOOT) {
+                    pos = pos.offset(state.getValue(BlockBed.FACING));
+                }
+                Set<IWaypoint> waypoints = baritone.getWorldProvider().getCurrentWorld().getWaypoints().getByTag(IWaypoint.Tag.BED);
+                boolean exists = waypoints.stream().map(IWaypoint::getLocation).filter(pos::equals).findFirst().isPresent();
+                if (!exists) {
+                    baritone.getWorldProvider().getCurrentWorld().getWaypoints().addWaypoint(new Waypoint("bed", Waypoint.Tag.BED, pos));
+                }
+            }
         }
     }
 
     @Override
     public void onPlayerDeath() {
-        baritone.getWorldProvider().getCurrentWorld().getWaypoints().addWaypoint(new Waypoint("death", Waypoint.Tag.DEATH, ctx.playerFeet()));
+        Waypoint deathWaypoint = new Waypoint("death", Waypoint.Tag.DEATH, ctx.playerFeet());
+        baritone.getWorldProvider().getCurrentWorld().getWaypoints().addWaypoint(deathWaypoint);
+        ITextComponent component = new TextComponentString("Death position saved.");
+        component.getStyle()
+                .setColor(TextFormatting.WHITE)
+                .setHoverEvent(new HoverEvent(
+                        HoverEvent.Action.SHOW_TEXT,
+                        new TextComponentString("Click to goto death")
+                ))
+                .setClickEvent(new ClickEvent(
+                        ClickEvent.Action.RUN_COMMAND,
+                        String.format(
+                                "%s%s goto %s @ %d",
+                                FORCE_COMMAND_PREFIX,
+                                "wp",
+                                deathWaypoint.getTag().getName(),
+                                deathWaypoint.getCreationTimestamp()
+                        )
+                ));
+        Helper.HELPER.logDirect(component);
     }
 
 

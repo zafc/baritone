@@ -26,6 +26,7 @@ import net.minecraft.init.Enchantments;
 import net.minecraft.init.MobEffects;
 import net.minecraft.item.Item.ToolMaterial;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemSword;
 import net.minecraft.item.ItemTool;
 
 import java.util.HashMap;
@@ -96,12 +97,27 @@ public class ToolSet {
     }
 
     /**
-     * Calculate which tool on the hotbar is best for mining
+     * Calculate which tool on the hotbar is best for mining, depending on an override setting,
+     * related to auto tool movement cost, it will either return current selected slot, or the best slot.
      *
      * @param b the blockstate to be mined
      * @return An int containing the index in the tools array that worked best
      */
+
     public int getBestSlot(Block b, boolean preferSilkTouch) {
+        return getBestSlot(b, preferSilkTouch, false);
+    }
+
+    public int getBestSlot(Block b, boolean preferSilkTouch, boolean pathingCalculation) {
+
+        /*
+        If we actually want know what efficiency our held item has instead of the best one
+        possible, this lets us make pathing depend on the actual tool to be used (if auto tool is disabled)
+        */
+        if (!Baritone.settings().autoTool.value && pathingCalculation) {
+            return player.inventory.currentItem;
+        }
+
         int best = 0;
         double highestSpeed = Double.NEGATIVE_INFINITY;
         int lowestCost = Integer.MIN_VALUE;
@@ -109,6 +125,13 @@ public class ToolSet {
         IBlockState blockState = b.getDefaultState();
         for (int i = 0; i < 9; i++) {
             ItemStack itemStack = player.inventory.getStackInSlot(i);
+            if (!Baritone.settings().useSwordToMine.value && itemStack.getItem() instanceof ItemSword) {
+                continue;
+            }
+          
+            if (Baritone.settings().itemSaver.value && (itemStack.getItemDamage() + Baritone.settings().itemSaverThreshold.value) >= itemStack.getMaxDamage() && itemStack.getMaxDamage() > 1) {
+                continue;
+            }
             double speed = calculateSpeedVsBlock(itemStack, blockState);
             boolean silkTouch = hasSilkTouch(itemStack);
             if (speed > highestSpeed) {
@@ -137,12 +160,12 @@ public class ToolSet {
      * @return A double containing the destruction ticks with the best tool
      */
     private double getBestDestructionTime(Block b) {
-        ItemStack stack = player.inventory.getStackInSlot(getBestSlot(b, false));
+        ItemStack stack = player.inventory.getStackInSlot(getBestSlot(b, false, true));
         return calculateSpeedVsBlock(stack, b.getDefaultState()) * avoidanceMultiplier(b);
     }
 
     private double avoidanceMultiplier(Block b) {
-        return Baritone.settings().blocksToAvoidBreaking.value.contains(b) ? 0.1 : 1;
+        return Baritone.settings().blocksToAvoidBreaking.value.contains(b) ? Baritone.settings().avoidBreakingMultiplier.value : 1;
     }
 
     /**

@@ -20,20 +20,20 @@ package baritone.command;
 import baritone.api.BaritoneAPI;
 import baritone.api.IBaritone;
 import baritone.api.Settings;
-import baritone.utils.accessor.IGuiScreen;
+import baritone.api.command.argument.ICommandArgument;
+import baritone.api.command.exception.CommandNotEnoughArgumentsException;
+import baritone.api.command.exception.CommandNotFoundException;
+import baritone.api.command.helpers.TabCompleteHelper;
+import baritone.api.command.manager.ICommandManager;
 import baritone.api.event.events.ChatEvent;
 import baritone.api.event.events.TabCompleteEvent;
 import baritone.api.event.listener.AbstractGameEventListener;
 import baritone.api.utils.Helper;
 import baritone.api.utils.SettingsUtil;
-import baritone.api.command.argument.ICommandArgument;
-import baritone.api.command.exception.CommandNotEnoughArgumentsException;
-import baritone.api.command.exception.CommandNotFoundException;
 import baritone.command.argument.ArgConsumer;
-import baritone.api.command.helpers.TabCompleteHelper;
-import baritone.api.command.manager.ICommandManager;
 import baritone.command.argument.CommandArguments;
 import baritone.command.manager.CommandManager;
+import baritone.utils.accessor.IGuiScreen;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
@@ -124,7 +124,7 @@ public class ExampleBaritoneControl implements Helper, AbstractGameEventListener
             }
         } else if (argc.hasExactlyOne()) {
             for (Settings.Setting setting : settings.allSettings) {
-                if (setting.getName().equals("logger")) {
+                if (SettingsUtil.javaOnlySetting(setting)) {
                     continue;
                 }
                 if (setting.getName().equalsIgnoreCase(pair.getFirst())) {
@@ -177,7 +177,7 @@ public class ExampleBaritoneControl implements Helper, AbstractGameEventListener
                             .stream();
                 }
                 Settings.Setting setting = settings.byLowerName.get(argc.getString().toLowerCase(Locale.US));
-                if (setting != null) {
+                if (setting != null && !SettingsUtil.javaOnlySetting(setting)) {
                     if (setting.getValueClass() == Boolean.class) {
                         TabCompleteHelper helper = new TabCompleteHelper();
                         if ((Boolean) setting.value) {
