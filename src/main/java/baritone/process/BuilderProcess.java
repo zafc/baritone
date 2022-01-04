@@ -1203,16 +1203,17 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
                 continue;
             }
             //if (stack.getItem().toString() != "air") System.out.println("BARIT2: " + stack.getItem().toString());
-
-            final Block targetBlock = ((BlockItem) stack.getItem()).getBlock();
-            final BlockState targetState = targetBlock.getStateDefinition().getPossibleStates().get(0);
-
             /*final Vec3 playerPos = new Vec3(ctx.player().position().x, ctx.player().position().y, ctx.player().position().z);
             final BlockHitResult playerFeetHitResult = new BlockHitResult(playerPos, Direction.UP, ctx.playerFeet(), false);
             final UseOnContext usageMainHandAction = new UseOnContext(ctx.world(), ctx.player(), InteractionHand.MAIN_HAND, stack, playerFeetHitResult) {};
             final BlockPlaceContext blockPlacementContext = new BlockPlaceContext(usageMainHandAction);
             final Block targetBlock = ((BlockItem) stack.getItem()).getBlock();
             final BlockState targetState = targetBlock.getStateForPlacement(blockPlacementContext);*/
+
+            final Block targetBlock = ((BlockItem) stack.getItem()).getBlock();
+            final BlockState targetState = targetBlock.getStateDefinition().getPossibleStates().get(0);
+
+
             //if (stack.getItem().toString() != "air") System.out.println("BARIT3: " + targetState);
             result.add(targetState);
             //result.add(((BlockItem) stack.getItem()).getBlock().getStateForPlacement(new BlockPlaceContext(new UseOnContext(ctx.world(), ctx.player(), InteractionHand.MAIN_HAND, stack, new BlockHitResult(new Vec3(ctx.player().position().x, ctx.player().position().y, ctx.player().position().z), Direction.UP, ctx.playerFeet(), false)) {})));
