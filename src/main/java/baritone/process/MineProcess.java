@@ -29,9 +29,7 @@ import baritone.cache.CachedChunk;
 import baritone.cache.WorldScanner;
 import baritone.pathing.movement.CalculationContext;
 import baritone.pathing.movement.MovementHelper;
-import baritone.utils.BaritoneProcessHelper;
-import baritone.utils.BlockStateInterface;
-import baritone.utils.NotificationHelper;
+import baritone.utils.*;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -64,6 +62,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
     private GoalRunAway branchPointRunaway;
     private int desiredQuantity;
     private int tickCount;
+    //private Trail snake;
 
     public MineProcess(Baritone baritone) {
         super(baritone);
@@ -76,6 +75,17 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
 
     @Override
     public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
+        /*if (snake == null) snake = new Trail();
+        snake.tick();
+        if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
+            return snake.getRunAwayCommand();
+        }
+        snake.printCurrent();*/
+
+        if (Trail.getInstance().updateAndCheck()) {
+            return Trail.getInstance().getRunAwayCommand();
+        }
+
         if (desiredQuantity > 0) {
             int curr = ctx.player().getInventory().items.stream()
                     .filter(stack -> filter.has(stack))

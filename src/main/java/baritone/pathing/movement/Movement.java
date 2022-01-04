@@ -18,18 +18,23 @@
 package baritone.pathing.movement;
 
 import baritone.Baritone;
+import baritone.api.BaritoneAPI;
 import baritone.api.IBaritone;
 import baritone.api.pathing.movement.IMovement;
 import baritone.api.pathing.movement.MovementStatus;
 import baritone.api.utils.*;
 import baritone.api.utils.input.Input;
 import baritone.behavior.PathingBehavior;
+import baritone.process.BuilderProcess;
 import baritone.utils.BlockStateInterface;
 import java.util.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.item.FallingBlockEntity;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.AABB;
+
+import javax.swing.text.html.Option;
 
 public abstract class Movement implements IMovement, MovementHelper {
 
@@ -278,6 +283,7 @@ public abstract class Movement implements IMovement, MovementHelper {
         List<BlockPos> result = new ArrayList<>();
         if (positionToPlace != null && !MovementHelper.canWalkOn(bsi, positionToPlace.x, positionToPlace.y, positionToPlace.z)) {
             result.add(positionToPlace);
+
         }
         toPlaceCached = result;
         return result;

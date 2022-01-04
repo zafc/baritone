@@ -49,7 +49,9 @@ public class GoalGetToBlock implements Goal, IGoalRenderPos {
         int xDiff = x - this.x;
         int yDiff = y - this.y;
         int zDiff = z - this.z;
-        return Math.abs(xDiff) + Math.abs(yDiff < 0 ? yDiff + 1 : yDiff) + Math.abs(zDiff) <= 1;
+        final boolean result = Math.abs(xDiff) + Math.abs(yDiff < 0 ? yDiff + 1 : yDiff) + Math.abs(zDiff) <= 1;
+        //System.out.println("e: " + result);
+        return result;
     }
 
     @Override
