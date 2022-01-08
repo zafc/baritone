@@ -106,6 +106,9 @@ public interface MovementHelper extends ActionCosts, Helper {
             BlockState up = bsi.get0(x, y + 1, z);
             return up.getFluidState().isEmpty();
         }
+        if (AltoClefSettings.getInstance().shouldAvoidWalkThroughForce(x, y, z)) {
+            return false;
+        }
         if (Baritone.settings().blocksToAvoid.value.contains(block)) {
             return false;
         }
@@ -197,6 +200,9 @@ public interface MovementHelper extends ActionCosts, Helper {
                 || block instanceof EndPortalBlock
                 || block instanceof SkullBlock
                 || block instanceof ShulkerBoxBlock) {
+            return false;
+        }
+        if (AltoClefSettings.getInstance().shouldAvoidWalkThroughForce(pos)) {
             return false;
         }
         // door, fence gate, liquid, trapdoor have been accounted for, nothing else uses the world or pos parameters
