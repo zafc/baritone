@@ -51,7 +51,6 @@ import static baritone.api.pathing.movement.ActionCosts.COST_INF;
  * @author leijurv
  */
 public final class MineProcess extends BaritoneProcessHelper implements IMineProcess {
-
     private static final int ORE_LOCATIONS_COUNT = 64;
 
     private BlockOptionalMetaLookup filter;
@@ -62,7 +61,6 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
     private GoalRunAway branchPointRunaway;
     private int desiredQuantity;
     private int tickCount;
-    //private Trail snake;
 
     public MineProcess(Baritone baritone) {
         super(baritone);
@@ -75,13 +73,6 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
 
     @Override
     public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
-        /*if (snake == null) snake = new Trail();
-        snake.tick();
-        if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
-            return snake.getRunAwayCommand();
-        }
-        snake.printCurrent();*/
-
         if (Trail.getInstance().updateAndCheck()) {
             return Trail.getInstance().getRunAwayCommand();
         }

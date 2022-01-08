@@ -21,14 +21,12 @@ import baritone.api.utils.SettingsUtil;
 import baritone.api.utils.interfaces.IGoalRenderPos;
 import net.minecraft.core.BlockPos;
 
-
 /**
  * Don't get into the block, but get directly adjacent to it. Useful for chests.
  *
  * @author avecowa
  */
 public class GoalGetToBlock implements Goal, IGoalRenderPos {
-
     public final int x;
     public final int y;
     public final int z;
@@ -49,9 +47,7 @@ public class GoalGetToBlock implements Goal, IGoalRenderPos {
         int xDiff = x - this.x;
         int yDiff = y - this.y;
         int zDiff = z - this.z;
-        final boolean result = Math.abs(xDiff) + Math.abs(yDiff < 0 ? yDiff + 1 : yDiff) + Math.abs(zDiff) <= 1;
-        //System.out.println("e: " + result);
-        return result;
+        return Math.abs(xDiff) + Math.abs(yDiff < 0 ? yDiff + 1 : yDiff) + Math.abs(zDiff) <= 1;
     }
 
     @Override

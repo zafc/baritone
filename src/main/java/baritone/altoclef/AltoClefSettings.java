@@ -76,20 +76,6 @@ public class AltoClefSettings {
         }
     }
 
-    /**
-     * If the original reference is passed and in the list,
-     * it will be removed from it.
-     *
-     * @param avoider original object reference that is in the list.
-     */
-    public void removeAvoidBlockBreak(Predicate<BlockPos> avoider) {
-        synchronized (breakMutex) {
-            if (_breakAvoiders.contains(avoider)) {
-                _breakAvoiders.remove(avoider);
-            }
-        }
-    }
-
     public void configurePlaceBucketButDontFall(boolean allow) {
         synchronized (propertiesMutex) {
             _dontPlaceBucketButStillFall = allow;
@@ -209,11 +195,9 @@ public class AltoClefSettings {
         return _protectedItems;
     }
     public void protectItem(Item item) {
-        //System.out.println("SET PROTECTION " + item.toString());
         _protectedItems.add(item);
     }
     public void stopProtectingItem(Item item) {
-        //System.out.println("UNSET PROTECTION " + item.toString());
         _protectedItems.remove(item);
     }
 

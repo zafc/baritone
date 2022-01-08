@@ -39,7 +39,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
 public final class GetToBlockProcess extends BaritoneProcessHelper implements IGetToBlockProcess {
-
     private BlockOptionalMeta gettingTo;
     private List<BlockPos> knownLocations;
     private List<BlockPos> blacklist; // locations we failed to calc to
@@ -47,7 +46,6 @@ public final class GetToBlockProcess extends BaritoneProcessHelper implements IG
 
     private int tickCount = 0;
     private int arrivalTickCount = 0;
-    //private Trail snake;
 
     public GetToBlockProcess(Baritone baritone) {
         super(baritone);
@@ -70,13 +68,6 @@ public final class GetToBlockProcess extends BaritoneProcessHelper implements IG
 
     @Override
     public synchronized PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
-        /*if (snake == null) snake = new Trail();
-        snake.tick();
-        if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
-            return snake.getRunAwayCommand();
-        }
-        snake.printCurrent();*/
-
         if (Trail.getInstance().updateAndCheck()) {
             return Trail.getInstance().getRunAwayCommand();
         }

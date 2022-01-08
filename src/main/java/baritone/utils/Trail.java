@@ -14,6 +14,9 @@ import net.minecraft.world.level.ChunkPos;
 
 import java.util.*;
 
+/**
+ * @author Meloweh
+ */
 public final class Trail {
     private final Queue<Pack> traversedChunks;
     private BetterBlockPos prev;
@@ -28,7 +31,7 @@ public final class Trail {
         this.traversedChunks = new ArrayDeque<>();
     }
 
-    public static final Trail getInstance() {
+    public static Trail getInstance() {
         return trail;
     }
 
@@ -44,7 +47,6 @@ public final class Trail {
     public boolean passedLimits() {
         return traversedChunks.stream().anyMatch(e ->
                 e.crossings.entrySet().stream().anyMatch(a -> a.getValue() > CROSS_LIMIT));
-        //return /*this.vectors.size() > VECTOR_LIMIT || */vectors.entrySet().stream().anyMatch(e -> e.getValue().crossings > CROSS_LIMIT);
     }
 
     private int getVectorCount() {
@@ -92,13 +94,6 @@ public final class Trail {
         return pathing;
     }
 
-    /*
-    public boolean isInGoal() {
-        final BetterBlockPos curr = getCurrent();
-        if (targetPos == null) return false;
-        return curr.closerThan(targetPos, 3d);
-    }*/
-
     public boolean updateAndCheck() {
         tick();
 
@@ -109,8 +104,6 @@ public final class Trail {
         final BetterBlockPos curr = getCurrent();
         if (isNull(curr)) return false;
 
-        //if (targetPos != null)
-        //System.out.println("is in target: " + curr.closerThan(targetPos, 3d));
         if (targetPos != null && curr.closerThan(new Vec3i(targetPos.getX(), curr.getY(), targetPos.getZ()), 3d)) {
             reset();
             return false;
@@ -123,22 +116,9 @@ public final class Trail {
     }
 
     public PathingCommand getRunAwayCommand() {
-        /*final BetterBlockPos curr = getCurrent();
-        if (isNull(curr)) return null;
-
-        if (targetPos != null && curr.closerThan(targetPos, 3d)) {
-            reset();
-            return null;
-        }
-
-        if (!pathing) {
-            reactivateRunAway();
-        }*/
-
         if (targetPos == null) {
             throw new IllegalStateException("targetPos is null");
         }
-
         return new PathingCommand(new GoalXZ(targetPos), PathingCommandType.FORCE_REVALIDATE_GOAL_AND_PATH);
     }
 
@@ -163,15 +143,9 @@ public final class Trail {
         final int counts = addOrInc(pack, curr, optPack.isEmpty());
         removeOutsiders();
 
-        //debug only
-        System.out.println(curr.getX() + ":" + curr.getY() + ":" + curr.getZ() + " Counts: "
-                + counts + " Size: " + getVectorCount());
-    }
-
-    /**
-     * Call only after tick.
-     */
-    public void printCurrent() {
+        //debug
+        //System.out.println(curr.getX() + ":" + curr.getY() + ":" + curr.getZ() + " Counts: "
+        //        + counts + " Size: " + getVectorCount());
     }
 
     private static boolean isSet(final Object o) {

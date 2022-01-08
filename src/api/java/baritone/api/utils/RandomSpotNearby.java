@@ -1,7 +1,5 @@
 package baritone.api.utils;
 
-import baritone.api.utils.BetterBlockPos;
-
 import java.util.Random;
 
 public class RandomSpotNearby {

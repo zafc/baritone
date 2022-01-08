@@ -40,10 +40,8 @@ import net.minecraft.world.entity.Entity;
  * @author leijurv
  */
 public final class FollowProcess extends BaritoneProcessHelper implements IFollowProcess {
-
     private Predicate<Entity> filter;
     private List<Entity> cache;
-    //private Trail snake;
 
     public FollowProcess(Baritone baritone) {
         super(baritone);
@@ -51,13 +49,6 @@ public final class FollowProcess extends BaritoneProcessHelper implements IFollo
 
     @Override
     public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
-        /*if (snake == null) snake = new Trail();
-        snake.tick();
-        if (snake.passedLimits() && snake.getRunAwayCommand() != null) {
-            return snake.getRunAwayCommand();
-        }*/
-        //snake.printCurrent();
-
         if (Trail.getInstance().updateAndCheck()) {
             return Trail.getInstance().getRunAwayCommand();
         }

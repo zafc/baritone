@@ -182,7 +182,6 @@ public final class FarmProcess extends BaritoneProcessHelper implements IFarmPro
 
     @Override
     public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
-        //VectorPrinter.print(this.getClass().descriptorString());
         ArrayList<Block> scan = new ArrayList<>();
         for (Harvest harvest : Harvest.values()) {
             scan.add(harvest.block);

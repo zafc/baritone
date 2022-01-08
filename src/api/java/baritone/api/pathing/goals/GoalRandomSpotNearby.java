@@ -5,15 +5,12 @@ import baritone.api.utils.BetterBlockPos;
 import baritone.api.utils.RandomSpotNearby;
 import baritone.api.utils.SettingsUtil;
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.Mth;
-import net.minecraft.world.phys.Vec3;
 
 public class GoalRandomSpotNearby implements Goal {
 
     private static final double SQRT_2 = Math.sqrt(2);
     private final int x;
     private final int z;
-    private final RandomSpotNearby rand;
 
     public GoalRandomSpotNearby() {
         this(16d);
@@ -25,8 +22,7 @@ public class GoalRandomSpotNearby implements Goal {
 
     public GoalRandomSpotNearby(final BlockPos pos, final double r) {
         if (pos == null) throw new IllegalStateException("No player position found.");
-        this.rand = new RandomSpotNearby(r);
-        final BetterBlockPos bbpCurr = this.rand.next(new BetterBlockPos(pos.getX(), pos.getY(), pos.getZ()));
+        final BetterBlockPos bbpCurr = (new RandomSpotNearby(r)).next(new BetterBlockPos(pos.getX(), pos.getY(), pos.getZ()));
         this.x = bbpCurr.getX();
         this.z = bbpCurr.getZ();
     }
@@ -71,13 +67,6 @@ public class GoalRandomSpotNearby implements Goal {
         }
         diagonal *= SQRT_2;
         return (diagonal + straight) * BaritoneAPI.getSettings().costHeuristic.value; // big TODO tune
-    }
-
-    public static GoalXZ fromDirection(Vec3 origin, float yaw, double distance) {
-        float theta = (float) Math.toRadians(yaw);
-        double x = origin.x - Mth.sin(theta) * distance;
-        double z = origin.z + Mth.cos(theta) * distance;
-        return new GoalXZ(Mth.floor(x), Mth.floor(z));
     }
 
     public int getX() {

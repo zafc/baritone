@@ -257,14 +257,9 @@ public class MovementPillar extends Movement {
                             .ifPresent(state::setTarget);
                     state.setInput(Input.JUMP, false); // breaking is like 5x slower when you're jumping
                     state.setInput(Input.CLICK_LEFT, true);
-                    /*System.out.println("pillar left");
-                    System.out.println(src.x + " " + src.y + " " + src.z);*/
                     blockIsThere = false;
                 } else if (ctx.player().isCrouching() && (ctx.isLookingAt(src.below()) || ctx.isLookingAt(src)) && ctx.player().position().y > dest.getY() + 0.1) {
                     state.setInput(Input.CLICK_RIGHT, true);
-                    //System.out.println("pillar right");
-                    //BaritoneAPI.getProvider().getPrimaryBaritone().getBuilderProcess().noteInsert(src); //TODO: this should be refactored to GoalPlacement in BuilderProcess to avoid code complexity
-                    //System.out.println(src.x + " " + src.y + " " + src.z);
                 }
             }
         }
