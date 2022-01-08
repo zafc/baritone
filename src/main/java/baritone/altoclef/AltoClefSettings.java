@@ -51,6 +51,8 @@ public class AltoClefSettings {
 
     private final List<Predicate<BlockPos>> _forceCanWalkOn = new ArrayList<>();
 
+    private final List<Predicate<BlockPos>> _forceAvoidWalkThrough = new ArrayList<>();
+
     private final List<BiPredicate<BlockState, ItemStack>> _forceUseTool = new ArrayList<>();
 
     private final List<BiFunction<Double, BlockPos, Double>> _globalHeuristics = new ArrayList<>();
@@ -111,6 +113,15 @@ public class AltoClefSettings {
         synchronized (propertiesMutex) {
             return _forceCanWalkOn.stream().anyMatch(pred -> pred.test(new BlockPos(x, y, z)));
         }
+    }
+
+    public boolean shouldAvoidWalkThroughForce(BlockPos pos) {
+        synchronized (propertiesMutex) {
+            return _forceAvoidWalkThrough.stream().anyMatch(pred -> pred.test(pos));
+        }
+    }
+    public boolean shouldAvoidWalkThroughForce(int x, int y, int z) {
+        return shouldAvoidWalkThroughForce(new BlockPos(x, y, z));
     }
 
     public boolean shouldForceUseTool(BlockState state, ItemStack tool) {
@@ -182,6 +193,9 @@ public class AltoClefSettings {
     }
     public List<Predicate<BlockPos>> getForceWalkOnPredicates() {
         return _forceCanWalkOn;
+    }
+    public List<Predicate<BlockPos>> getForceAvoidWalkThroughPredicates() {
+        return _forceAvoidWalkThrough;
     }
     public List<BiPredicate<BlockState, ItemStack>> getForceUseToolPredicates() {
         return _forceUseTool;
