@@ -31,13 +31,14 @@ import baritone.pathing.movement.CalculationContext;
 import baritone.pathing.movement.MovementHelper;
 import baritone.utils.BaritoneProcessHelper;
 import java.util.*;
+
+import baritone.utils.Trail;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
 public final class GetToBlockProcess extends BaritoneProcessHelper implements IGetToBlockProcess {
-
     private BlockOptionalMeta gettingTo;
     private List<BlockPos> knownLocations;
     private List<BlockPos> blacklist; // locations we failed to calc to
@@ -67,6 +68,10 @@ public final class GetToBlockProcess extends BaritoneProcessHelper implements IG
 
     @Override
     public synchronized PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
+        if (Trail.getInstance().updateAndCheck()) {
+            return Trail.getInstance().getRunAwayCommand();
+        }
+
         if (knownLocations == null) {
             rescan(new ArrayList<>(), new CalculationContext(baritone));
         }

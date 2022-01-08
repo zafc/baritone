@@ -24,6 +24,7 @@ import baritone.api.process.PathingCommand;
 import baritone.api.process.PathingCommandType;
 import baritone.utils.BaritoneProcessHelper;
 import baritone.utils.NotificationHelper;
+import baritone.utils.Trail;
 
 /**
  * As set by ExampleBaritoneControl or something idk
@@ -43,6 +44,8 @@ public final class CustomGoalProcess extends BaritoneProcessHelper implements IC
      * @see State
      */
     private State state;
+
+    //private Trail snake;
 
     public CustomGoalProcess(Baritone baritone) {
         super(baritone);
@@ -75,7 +78,21 @@ public final class CustomGoalProcess extends BaritoneProcessHelper implements IC
     }
 
     @Override
+    public boolean reactivateRunAway() {
+        return Trail.getInstance().reactivateRunAway();
+    }
+
+    @Override
+    public boolean isRunAwayActive() {
+        return Trail.getInstance().isRunAwayActive();
+    }
+
+    @Override
     public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
+        if (Trail.getInstance().updateAndCheck()) {
+            return Trail.getInstance().getRunAwayCommand();
+        }
+
         switch (this.state) {
             case GOAL_SET:
                 return new PathingCommand(this.goal, PathingCommandType.CANCEL_AND_SET_GOAL);
