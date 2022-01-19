@@ -65,6 +65,8 @@ public class AltoClefSettings {
 
     private boolean _allowSwimThroughLava = false;
 
+    private boolean _treatSoulSandAsOrdinaryBlock = false;
+
     public void avoidBlockBreak(BlockPos pos) {
         synchronized (breakMutex) {
             _blocksToAvoidBreaking.add(pos);
@@ -79,6 +81,12 @@ public class AltoClefSettings {
     public void configurePlaceBucketButDontFall(boolean allow) {
         synchronized (propertiesMutex) {
             _dontPlaceBucketButStillFall = allow;
+        }
+    }
+
+    public void treatSoulSandAsOrdinaryBlock(boolean enable) {
+        synchronized (propertiesMutex) {
+            _treatSoulSandAsOrdinaryBlock = enable;
         }
     }
 
@@ -122,6 +130,12 @@ public class AltoClefSettings {
     public boolean shouldNotPlaceBucketButStillFall() {
         synchronized (propertiesMutex) {
             return _dontPlaceBucketButStillFall;
+        }
+    }
+
+    public boolean shouldTreatSoulSandAsOrdinaryBlock() {
+        synchronized (propertiesMutex) {
+            return _treatSoulSandAsOrdinaryBlock;
         }
     }
 

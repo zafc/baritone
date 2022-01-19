@@ -18,6 +18,7 @@
 package baritone.pathing.movement.movements;
 
 import baritone.Baritone;
+import baritone.altoclef.AltoClefSettings;
 import baritone.api.IBaritone;
 import baritone.api.pathing.movement.MovementStatus;
 import baritone.api.utils.BetterBlockPos;
@@ -131,7 +132,7 @@ public class MovementAscend extends Movement {
             }
         } else {
             // jumpingFromBottomSlab must be false
-            if (toPlace.getBlock() == Blocks.SOUL_SAND) {
+            if (toPlace.getBlock() == Blocks.SOUL_SAND && !AltoClefSettings.getInstance().shouldTreatSoulSandAsOrdinaryBlock()) {
                 walk = WALK_ONE_OVER_SOUL_SAND_COST;
             } else {
                 walk = Math.max(JUMP_ONE_BLOCK_COST, WALK_ONE_BLOCK_COST);

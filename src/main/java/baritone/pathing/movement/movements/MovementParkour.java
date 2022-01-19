@@ -17,6 +17,7 @@
 
 package baritone.pathing.movement.movements;
 
+import baritone.altoclef.AltoClefSettings;
 import baritone.api.IBaritone;
 import baritone.api.pathing.movement.MovementStatus;
 import baritone.api.utils.BetterBlockPos;
@@ -95,7 +96,7 @@ public class MovementParkour extends Movement {
             return;
         }
         int maxJump;
-        if (standingOn.getBlock() == Blocks.SOUL_SAND) {
+        if (standingOn.getBlock() == Blocks.SOUL_SAND && !AltoClefSettings.getInstance().shouldTreatSoulSandAsOrdinaryBlock()) {
             maxJump = 2; // 1 block gap
         } else {
             if (context.canSprint) {
