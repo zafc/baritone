@@ -134,7 +134,7 @@ public class MovementDiagonal extends Movement {
         }
         double multiplier = WALK_ONE_BLOCK_COST;
         // For either possible soul sand, that affects half of our walking
-        if (destWalkOn.getBlock() == Blocks.SOUL_SAND && !AltoClefSettings.getInstance().shouldTreatSoulSandAsOrdinaryBlock()) {
+        if (destWalkOn.getBlock() == Blocks.SOUL_SAND) {
             multiplier += (WALK_ONE_OVER_SOUL_SAND_COST - WALK_ONE_BLOCK_COST) / 2;
         } else if (destWalkOn.getBlock() == Blocks.WATER) {
             multiplier += context.walkOnWaterOnePenalty * SQRT_2;
@@ -143,7 +143,7 @@ public class MovementDiagonal extends Movement {
         if (fromDown == Blocks.LADDER || fromDown == Blocks.VINE) {
             return;
         }
-        if (fromDown == Blocks.SOUL_SAND && !AltoClefSettings.getInstance().shouldTreatSoulSandAsOrdinaryBlock()) {
+        if (fromDown == Blocks.SOUL_SAND) {
             multiplier += (WALK_ONE_OVER_SOUL_SAND_COST - WALK_ONE_BLOCK_COST) / 2;
         }
         BlockState cuttingOver1 = context.get(x, y - 1, destZ);

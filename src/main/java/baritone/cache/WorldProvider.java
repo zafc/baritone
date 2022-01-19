@@ -64,7 +64,12 @@ public class WorldProvider implements IWorldProvider, Helper {
 
         // If there is an integrated server running (Aka Singleplayer) then do magic to find the world save file
         if (mc.hasSingleplayerServer()) {
-            directory = DimensionType.getStorageFolder(worldKey, integratedServer.getWorldPath(LevelResource.ROOT));
+            File p = integratedServer
+                    .getWorldPath(
+                            LevelResource.ROOT
+                    ).toFile();
+            directory = DimensionType.getStorageFolder(
+                    worldKey, p).toPath();
 
             // Gets the "depth" of this directory relative the the game's run directory, 2 is the location of the world
             if (directory.relativize(mc.gameDirectory.toPath()).getNameCount() != 2) {

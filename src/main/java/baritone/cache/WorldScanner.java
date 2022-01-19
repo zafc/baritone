@@ -150,7 +150,7 @@ public enum WorldScanner implements IWorldScanner {
         boolean foundWithinY = false;
         for (int y0 : coordinateIterationOrder) {
             LevelChunkSection section = chunkInternalStorageArray[y0];
-            if (section == null || section.hasOnlyAir()) {
+            if (section == null || LevelChunkSection.isEmpty(section)) {
                 continue;
             }
             int yReal = y0 << 4;
