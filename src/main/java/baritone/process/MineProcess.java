@@ -335,10 +335,10 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
         return ret;
     }
 
-    public static List<BlockPos> searchWorld(CalculationContext ctx, BlockOptionalMetaLookup filter, int max, List<BlockPos> alreadyKnown, List<BlockPos> blacklist, List<BlockPos> dropped) {
+    public static List<BlockPos> searchWorld(CalculationContext ctx, BlockOptionalMetaLookup filter, int maxPerType, List<BlockPos> alreadyKnown, List<BlockPos> blacklist, List<BlockPos> dropped) {
         List<BlockPos> locs = new ArrayList<>();
         List<Block> untracked = new ArrayList<>();
-        int maxTotal = max * filter.blocks().size();
+        int maxTotal = maxPerType * filter.blocks().size();
         for (BlockOptionalMeta bom : filter.blocks()) {
             Block block = bom.getBlock();
             if (CachedChunk.BLOCKS_TO_KEEP_TRACK_OF.contains(block)) {
@@ -357,13 +357,13 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
             }
         }
 
-        locs = prune(ctx, locs, filter, maxTotal, blacklist, dropped);
+        locs = prune(ctx, locs, filter, maxPerType, blacklist, dropped);
 
         if (!untracked.isEmpty() || (Baritone.settings().extendCacheOnThreshold.value && locs.size() < maxTotal)) {
             locs.addAll(WorldScanner.INSTANCE.scanChunkRadius(
                     ctx.getBaritone().getPlayerContext(),
                     filter,
-                    max,
+                    maxPerType,
                     10,
                     32
             )); // maxSearchRadius is NOT sq
@@ -371,7 +371,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
 
         locs.addAll(alreadyKnown);
 
-        return prune(ctx, locs, filter, maxTotal, blacklist, dropped);
+        return prune(ctx, locs, filter, maxPerType, blacklist, dropped);
     }
 
     private void addNearby() {
@@ -398,7 +398,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
         knownOreLocations = prune(new CalculationContext(baritone), knownOreLocations, filter, ORE_LOCATIONS_COUNT, blacklist, dropped);
     }
 
-    private static List<BlockPos> prune(CalculationContext ctx, List<BlockPos> locs2, BlockOptionalMetaLookup filter, int max, List<BlockPos> blacklist, List<BlockPos> dropped) {
+    private static List<BlockPos> prune(CalculationContext ctx, List<BlockPos> locs2, BlockOptionalMetaLookup filter, int maxPer, List<BlockPos> blacklist, List<BlockPos> dropped) {
         dropped.removeIf(drop -> {
             for (BlockPos pos : locs2) {
                 // No longer caring if we CAN break, we're just looking for a global search.
@@ -408,6 +408,7 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
             }
             return false;
         });
+        HashMap<Block, Integer> countsPerBlock = new HashMap<>();
         List<BlockPos> locs = locs2
                 .stream()
                 .distinct()
@@ -433,9 +434,19 @@ public final class MineProcess extends BaritoneProcessHelper implements IMinePro
                 .sorted(Comparator.comparingDouble(ctx.getBaritone().getPlayerContext().player().blockPosition()::distSqr))
                 .collect(Collectors.toList());
 
-        if (locs.size() > max) {
-            return locs.subList(0, max);
-        }
+        // Prune out a certain number per block type
+        locs = locs.stream()
+                .filter(pos -> {
+                    Block b = ctx.getBlock(pos.getX(), pos.getY(), pos.getZ());
+                    int count = countsPerBlock.getOrDefault(b, 0);
+                    if (count <= maxPer) {
+                        countsPerBlock.put(b, count + 1);
+                        return true;
+                    } else {
+                        return  false;
+                    }
+                }).collect(Collectors.toList());
+
         return locs;
     }
 
