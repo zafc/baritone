@@ -256,7 +256,11 @@ public class MovementDescend extends Movement {
             return true;
         }
         for (int y = 0; y <= 2; y++) { // we could hit any of the three blocks
-            if (MovementHelper.avoidWalkingInto(BlockStateInterface.get(ctx, into.above(y)))) {
+            BlockPos p = into.above(y);
+            if (MovementHelper.avoidWalkingInto(BlockStateInterface.get(ctx, p))) {
+                return true;
+            }
+            if (AltoClefSettings.getInstance().shouldAvoidWalkThroughForce(p)) {
                 return true;
             }
         }

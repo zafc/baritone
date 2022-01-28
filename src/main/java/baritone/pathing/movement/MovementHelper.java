@@ -316,6 +316,7 @@ public interface MovementHelper extends ActionCosts, Helper {
     static boolean canWalkOn(BlockStateInterface bsi, int x, int y, int z, BlockState state) {
         Block block = state.getBlock();
         if (AltoClefSettings.getInstance().canWalkOnForce(x, y, z)) return true;
+        if (AltoClefSettings.getInstance().shouldAvoidWalkThroughForce(x, y+1, z)) return false;
         if (block instanceof AirBlock || block == Blocks.MAGMA_BLOCK || block == Blocks.BUBBLE_COLUMN || block == Blocks.HONEY_BLOCK) {
             // early return for most common case (air)
             // plus magma, which is a normal cube but it hurts you
