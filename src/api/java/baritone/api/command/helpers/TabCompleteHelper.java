@@ -23,7 +23,7 @@ import baritone.api.command.argument.IArgConsumer;
 import baritone.api.command.manager.ICommandManager;
 import baritone.api.event.events.TabCompleteEvent;
 import baritone.api.utils.SettingsUtil;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.Comparator;
 import java.util.List;

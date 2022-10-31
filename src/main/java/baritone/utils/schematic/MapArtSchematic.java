@@ -19,8 +19,8 @@ package baritone.utils.schematic;
 
 import baritone.api.schematic.IStaticSchematic;
 import baritone.api.schematic.MaskSchematic;
-import net.minecraft.block.BlockAir;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.world.level.block.AirBlock;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.OptionalInt;
 import java.util.function.Predicate;
@@ -34,19 +34,13 @@ public class MapArtSchematic extends MaskSchematic {
         this.heightMap = generateHeightMap(schematic);
     }
 
-    @Override
-    protected boolean partOfMask(int x, int y, int z, IBlockState currentState) {
-        return y >= this.heightMap[x][z];
-    }
-
     private static int[][] generateHeightMap(IStaticSchematic schematic) {
         int[][] heightMap = new int[schematic.widthX()][schematic.lengthZ()];
 
         for (int x = 0; x < schematic.widthX(); x++) {
             for (int z = 0; z < schematic.lengthZ(); z++) {
-                IBlockState[] column = schematic.getColumn(x, z);
-
-                OptionalInt lowestBlockY = lastIndexMatching(column, state -> !(state.getBlock() instanceof BlockAir));
+                BlockState[] column = schematic.getColumn(x, z);
+                OptionalInt lowestBlockY = lastIndexMatching(column, state -> !(state.getBlock() instanceof AirBlock));
                 if (lowestBlockY.isPresent()) {
                     heightMap[x][z] = lowestBlockY.getAsInt();
                 } else {
@@ -57,6 +51,11 @@ public class MapArtSchematic extends MaskSchematic {
             }
         }
         return heightMap;
+    }
+
+    @Override
+    protected boolean partOfMask(int x, int y, int z, BlockState currentState) {
+        return y >= this.heightMap[x][z];
     }
 
     private static <T> OptionalInt lastIndexMatching(T[] arr, Predicate<? super T> predicate) {
