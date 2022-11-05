@@ -30,9 +30,10 @@ import java.util.regex.Pattern;
  */
 public final class CommandArguments {
 
-    private CommandArguments() {}
-
     private static final Pattern ARG_PATTERN = Pattern.compile("\\S+");
+
+    private CommandArguments() {
+    }
 
     /**
      * Turn a string into a list of {@link ICommandArgument}s. This is needed because of {@link ICommandArgument#getRawRest()}

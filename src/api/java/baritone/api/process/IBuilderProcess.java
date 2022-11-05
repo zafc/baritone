@@ -25,6 +25,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Brady
@@ -41,6 +42,8 @@ public interface IBuilderProcess extends IBaritoneProcess {
      */
     void build(String name, ISchematic schematic, Vec3i origin);
 
+    boolean isFromAltoclef();
+
     /**
      * Requests a build for the specified schematic, labeled as specified, with the specified origin.
      *
@@ -56,15 +59,31 @@ public interface IBuilderProcess extends IBaritoneProcess {
         return build(schematicFile, file, origin);
     }
 
+    void build(String name, ISchematic schematic, Vec3i origin, boolean fromAltoclef);
+
+    boolean build(String name, File schematic, Vec3i origin, boolean fromAltoclef);
+
     void buildOpenSchematic();
 
     void pause();
 
     boolean isPaused();
 
+    Vec3i getSchemSize();
+
+    void popStack();
+
+    boolean clearState();
+
+    boolean isFromAltoclefFinished();
+
     void resume();
 
     void clearArea(BlockPos corner1, BlockPos corner2);
+
+    void reset();
+
+    Map<BlockState, Integer> getMissing();
 
     /**
      * @return A list of block states that are estimated to be placeable by this builder process. You can use this in
@@ -72,4 +91,6 @@ public interface IBuilderProcess extends IBaritoneProcess {
      * cause it to give up. This is updated every tick, but only while the builder process is active.
      */
     List<BlockState> getApproxPlaceable();
+
+    void noteInsert(BlockPos pos);
 }

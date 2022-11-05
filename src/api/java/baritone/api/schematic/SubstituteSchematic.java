@@ -34,7 +34,7 @@ public class SubstituteSchematic extends AbstractSchematic {
     private final Map<Block, List<Block>> substitutions;
     private final Map<BlockState, Map<Block, BlockState>> blockStateCache = new HashMap<>();
 
-    public SubstituteSchematic(ISchematic schematic, Map<Block,List<Block>> substitutions) {
+    public SubstituteSchematic(ISchematic schematic, Map<Block, List<Block>> substitutions) {
         super(schematic.widthX(), schematic.heightY(), schematic.lengthZ());
         this.schematic = schematic;
         this.substitutions = substitutions;

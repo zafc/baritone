@@ -179,7 +179,7 @@ public class SettingsUtil {
     /**
      * This should always be the same as whether the setting can be parsed from or serialized to a string
      *
-     * @param the setting
+     * @param setting setting
      * @return true if the setting can not be set or read by the user
      */
     public static boolean javaOnlySetting(Settings.Setting setting) {
@@ -203,28 +203,6 @@ public class SettingsUtil {
             throw new IllegalStateException(ioMethod + " parser returned incorrect type, expected " + intendedType + " got " + parsed + " which is " + parsed.getClass());
         }
         setting.value = parsed;
-    }
-
-    private interface ISettingParser<T> {
-
-        T parse(ParserContext context, String raw);
-
-        String toString(ParserContext context, T value);
-
-        boolean accepts(Type type);
-    }
-
-    private static class ParserContext {
-
-        private final Settings.Setting<?> setting;
-
-        private ParserContext(Settings.Setting<?> setting) {
-            this.setting = setting;
-        }
-
-        private Settings.Setting<?> getSetting() {
-            return this.setting;
-        }
     }
 
     private enum Parser implements ISettingParser {
@@ -301,7 +279,7 @@ public class SettingsUtil {
                 Parser keyParser = Parser.getParser(keyType);
                 Parser valueParser = Parser.getParser(valueType);
 
-                return ((Map<?,?>) value).entrySet().stream()
+                return ((Map<?, ?>) value).entrySet().stream()
                         .map(o -> keyParser.toString(context, o.getKey()) + "->" + valueParser.toString(context, o.getValue()))
                         .collect(Collectors.joining(","));
             }
@@ -332,6 +310,12 @@ public class SettingsUtil {
             this.toString = x -> toString.apply((T) x);
         }
 
+        public static Parser getParser(Type type) {
+            return Stream.of(values())
+                    .filter(parser -> parser.accepts(type))
+                    .findFirst().orElse(null);
+        }
+
         @Override
         public Object parse(ParserContext context, String raw) {
             Object parsed = this.parser.apply(raw);
@@ -348,11 +332,27 @@ public class SettingsUtil {
         public boolean accepts(Type type) {
             return type instanceof Class && this.cla$$.isAssignableFrom((Class) type);
         }
+    }
 
-        public static Parser getParser(Type type) {
-            return Stream.of(values())
-                    .filter(parser -> parser.accepts(type))
-                    .findFirst().orElse(null);
+    private interface ISettingParser<T> {
+
+        T parse(ParserContext context, String raw);
+
+        String toString(ParserContext context, T value);
+
+        boolean accepts(Type type);
+    }
+
+    private static class ParserContext {
+
+        private final Settings.Setting<?> setting;
+
+        private ParserContext(Settings.Setting<?> setting) {
+            this.setting = setting;
+        }
+
+        private Settings.Setting<?> getSetting() {
+            return this.setting;
         }
     }
 }

@@ -36,24 +36,6 @@ public final class VarInt {
         this.size = this.serialized.length;
     }
 
-    /**
-     * @return The integer value that is represented by this {@link VarInt}.
-     */
-    public final int getValue() {
-        return this.value;
-    }
-
-    /**
-     * @return The size of this {@link VarInt}, in bytes, once serialized.
-     */
-    public final int getSize() {
-        return this.size;
-    }
-
-    public final byte[] serialize() {
-        return this.serialized;
-    }
-
     private static byte[] serialize0(int valueIn) {
         ByteList bytes = new ByteArrayList();
 
@@ -91,5 +73,23 @@ public final class VarInt {
         }
 
         return new VarInt(value);
+    }
+
+    /**
+     * @return The integer value that is represented by this {@link VarInt}.
+     */
+    public final int getValue() {
+        return this.value;
+    }
+
+    /**
+     * @return The size of this {@link VarInt}, in bytes, once serialized.
+     */
+    public final int getSize() {
+        return this.size;
+    }
+
+    public final byte[] serialize() {
+        return this.serialized;
     }
 }

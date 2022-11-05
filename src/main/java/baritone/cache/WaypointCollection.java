@@ -48,7 +48,8 @@ public class WaypointCollection implements IWaypointCollection {
         if (!Files.exists(directory)) {
             try {
                 Files.createDirectories(directory);
-            } catch (IOException ignored) {}
+            } catch (IOException ignored) {
+            }
         }
         System.out.println("Would save waypoints to " + directory);
         this.waypoints = new HashMap<>();
@@ -88,7 +89,8 @@ public class WaypointCollection implements IWaypointCollection {
                 int z = in.readInt();
                 this.waypoints.get(tag).add(new Waypoint(name, tag, new BetterBlockPos(x, y, z), creationTimestamp));
             }
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
     }
 
     private synchronized void save(Waypoint.Tag tag) {

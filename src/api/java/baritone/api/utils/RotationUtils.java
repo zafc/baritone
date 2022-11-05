@@ -62,7 +62,8 @@ public final class RotationUtils {
             new Vec3(1, 0.5, 0.5)  // East
     };
 
-    private RotationUtils() {}
+    private RotationUtils() {
+    }
 
     /**
      * Calculates the rotation from BlockPos<sub>dest</sub> to BlockPos<sub>orig</sub>

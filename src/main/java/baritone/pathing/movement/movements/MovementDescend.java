@@ -48,22 +48,6 @@ public class MovementDescend extends Movement {
         super(baritone, start, end, new BetterBlockPos[]{end.above(2), end.above(), end}, end.below());
     }
 
-    @Override
-    public void reset() {
-        super.reset();
-        numTicks = 0;
-    }
-
-    @Override
-    public double calculateCost(CalculationContext context) {
-        MutableMoveResult result = new MutableMoveResult();
-        cost(context, src.x, src.y, src.z, dest.x, dest.z, result);
-        if (result.y != dest.y) {
-            return COST_INF; // doesn't apply to us, this position is a fall not a descend
-        }
-        return result.cost;
-    }
-
     public static void cost(CalculationContext context, int x, int y, int z, int destX, int destZ, MutableMoveResult res) {
         double totalCost = 0;
         BlockState destDown = context.get(destX, y - 1, destZ);
@@ -196,6 +180,22 @@ public class MovementDescend extends Movement {
                 return false;
             }
         }
+    }
+
+    @Override
+    public void reset() {
+        super.reset();
+        numTicks = 0;
+    }
+
+    @Override
+    public double calculateCost(CalculationContext context) {
+        MutableMoveResult result = new MutableMoveResult();
+        cost(context, src.x, src.y, src.z, dest.x, dest.z, result);
+        if (result.y != dest.y) {
+            return COST_INF; // doesn't apply to us, this position is a fall not a descend
+        }
+        return result.cost;
     }
 
     @Override

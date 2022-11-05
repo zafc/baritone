@@ -48,6 +48,16 @@ public final class CustomGoalProcess extends BaritoneProcessHelper implements IC
     }
 
     @Override
+    public void path() {
+        this.state = State.PATH_REQUESTED;
+    }
+
+    @Override
+    public Goal getGoal() {
+        return this.goal;
+    }
+
+    @Override
     public void setGoal(Goal goal) {
         this.goal = goal;
         if (this.state == State.NONE) {
@@ -56,16 +66,6 @@ public final class CustomGoalProcess extends BaritoneProcessHelper implements IC
         if (this.state == State.EXECUTING) {
             this.state = State.PATH_REQUESTED;
         }
-    }
-
-    @Override
-    public void path() {
-        this.state = State.PATH_REQUESTED;
-    }
-
-    @Override
-    public Goal getGoal() {
-        return this.goal;
     }
 
     @Override

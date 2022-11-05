@@ -27,17 +27,17 @@ import java.util.Optional;
 
 public class MovementState {
 
+    private final Map<Input, Boolean> inputState = new HashMap<>();
     private MovementStatus status;
     private MovementTarget target = new MovementTarget();
-    private final Map<Input, Boolean> inputState = new HashMap<>();
+
+    public MovementStatus getStatus() {
+        return status;
+    }
 
     public MovementState setStatus(MovementStatus status) {
         this.status = status;
         return this;
-    }
-
-    public MovementStatus getStatus() {
-        return status;
     }
 
     public MovementTarget getTarget() {

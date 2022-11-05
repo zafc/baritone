@@ -41,16 +41,16 @@ public class Registry<V> {
      */
     private final Deque<V> _entries = new LinkedList<>();
     /**
+     * The collection of entries that are currently in this registry. This is a collection (and not a list) because,
+     * internally, entries are stored in a linked list, which is not the same as a normal list.
+     */
+    public final Collection<V> entries = Collections.unmodifiableCollection(_entries);
+    /**
      * A HashSet containing every entry currently registered. Entries are added to this set when something is registered
      * and removed from the set when they are unregistered. An entry being present in this set indicates that it is
      * currently registered, can be removed, and should not be reregistered until it is removed.
      */
     private final Set<V> registered = new HashSet<>();
-    /**
-     * The collection of entries that are currently in this registry. This is a collection (and not a list) because,
-     * internally, entries are stored in a linked list, which is not the same as a normal list.
-     */
-    public final Collection<V> entries = Collections.unmodifiableCollection(_entries);
 
     /**
      * @param entry The entry to check.

@@ -50,7 +50,7 @@ import static baritone.api.command.IBaritoneChatControl.FORCE_COMMAND_PREFIX;
 
 public class WaypointsCommand extends Command {
 
-    private Map<IWorldData,List<IWaypoint>> deletedWaypoints = new HashMap<>();
+    private Map<IWorldData, List<IWaypoint>> deletedWaypoints = new HashMap<>();
 
     public WaypointsCommand(IBaritone baritone) {
         super(baritone, "waypoints", "waypoint", "wp");

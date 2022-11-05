@@ -35,26 +35,6 @@ import static baritone.api.utils.Helper.HELPER;
 public enum RelativeFile implements IDatatypePost<File, File> {
     INSTANCE;
 
-    @Override
-    public File apply(IDatatypeContext ctx, File original) throws CommandException {
-        if (original == null) {
-            original = new File("./");
-        }
-
-        Path path;
-        try {
-            path = FileSystems.getDefault().getPath(ctx.getConsumer().getString());
-        } catch (InvalidPathException e) {
-            throw new IllegalArgumentException("invalid path");
-        }
-        return getCanonicalFileUnchecked(original.toPath().resolve(path).toFile());
-    }
-
-    @Override
-    public Stream<String> tabComplete(IDatatypeContext ctx) {
-        return Stream.empty();
-    }
-
     /**
      * Seriously
      *
@@ -83,10 +63,10 @@ public enum RelativeFile implements IDatatypePost<File, File> {
         boolean useParent = !currentPathStringThing.isEmpty() && !currentPathStringThing.endsWith(File.separator);
         File currentFile = currentPath.isAbsolute() ? currentPath.toFile() : new File(base, currentPathStringThing);
         return Stream.of(Objects.requireNonNull(getCanonicalFileUnchecked(
-                useParent
-                        ? currentFile.getParentFile()
-                        : currentFile
-        ).listFiles()))
+                        useParent
+                                ? currentFile.getParentFile()
+                                : currentFile
+                ).listFiles()))
                 .map(f -> (currentPath.isAbsolute() ? f : basePath.relativize(f.toPath()).toString()) +
                         (f.isDirectory() ? File.separator : ""))
                 .filter(s -> s.toLowerCase(Locale.US).startsWith(currentPathStringThing.toLowerCase(Locale.US)))
@@ -99,5 +79,25 @@ public enum RelativeFile implements IDatatypePost<File, File> {
             return gameDir.getParentFile();
         }
         return gameDir;
+    }
+
+    @Override
+    public File apply(IDatatypeContext ctx, File original) throws CommandException {
+        if (original == null) {
+            original = new File("./");
+        }
+
+        Path path;
+        try {
+            path = FileSystems.getDefault().getPath(ctx.getConsumer().getString());
+        } catch (InvalidPathException e) {
+            throw new IllegalArgumentException("invalid path");
+        }
+        return getCanonicalFileUnchecked(original.toPath().resolve(path).toFile());
+    }
+
+    @Override
+    public Stream<String> tabComplete(IDatatypeContext ctx) {
+        return Stream.empty();
     }
 }

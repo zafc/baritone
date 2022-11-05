@@ -105,7 +105,7 @@ public class MovementParkour extends Movement {
                 maxJump = 3;
             }
         }
-        
+
         // check parkour jumps from smallest to largest for obstacles/walls and landing positions
         int verifiedMaxJump = 1; // i - 1 (when i = 2)
         for (int i = 2; i <= maxJump; i++) {
@@ -146,14 +146,14 @@ public class MovementParkour extends Movement {
                 }
                 break;
             }
-            
+
             if (!MovementHelper.fullyPassable(context, destX, y + 3, destZ)) {
                 break;
             }
-            
+
             verifiedMaxJump = i;
         }
-        
+
         // parkour place starts here
         if (!context.allowParkourPlace) {
             return;

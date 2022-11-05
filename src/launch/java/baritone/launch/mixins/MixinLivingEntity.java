@@ -31,8 +31,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static org.objectweb.asm.Opcodes.GETFIELD;
-
 /**
  * @author Brady
  * @since 9/10/2018

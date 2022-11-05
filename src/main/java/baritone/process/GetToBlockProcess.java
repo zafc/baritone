@@ -232,6 +232,14 @@ public final class GetToBlockProcess extends BaritoneProcessHelper implements IG
         return block == Blocks.CRAFTING_TABLE || block == Blocks.FURNACE || block == Blocks.BLAST_FURNACE || block == Blocks.ENDER_CHEST || block == Blocks.CHEST || block == Blocks.TRAPPED_CHEST;
     }
 
+    private boolean blockOnTopMustBeRemoved(Block block) {
+        if (!rightClickOnArrival(block)) { // only if we plan to actually open it on arrival
+            return false;
+        }
+        // only these chests; you can open a crafting table or furnace even with a block on top
+        return block == Blocks.ENDER_CHEST || block == Blocks.CHEST || block == Blocks.TRAPPED_CHEST;
+    }
+
     // this is to signal to MineProcess that we don't care about the allowBreak setting
     // it is NOT to be used to actually calculate a path
     public class GetToBlockCalculationContext extends CalculationContext {
@@ -244,13 +252,5 @@ public final class GetToBlockProcess extends BaritoneProcessHelper implements IG
         public double breakCostMultiplierAt(int x, int y, int z, BlockState current) {
             return 1;
         }
-    }
-
-    private boolean blockOnTopMustBeRemoved(Block block) {
-        if (!rightClickOnArrival(block)) { // only if we plan to actually open it on arrival
-            return false;
-        }
-        // only these chests; you can open a crafting table or furnace even with a block on top
-        return block == Blocks.ENDER_CHEST || block == Blocks.CHEST || block == Blocks.TRAPPED_CHEST;
     }
 }

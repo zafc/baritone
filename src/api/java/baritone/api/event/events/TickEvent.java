@@ -35,6 +35,11 @@ public final class TickEvent {
         this.count = count;
     }
 
+    public static synchronized BiFunction<EventState, Type, TickEvent> createNextProvider() {
+        final int count = overallTickCount++;
+        return (state, type) -> new TickEvent(state, type, count);
+    }
+
     public int getCount() {
         return count;
     }
@@ -45,11 +50,6 @@ public final class TickEvent {
 
     public EventState getState() {
         return state;
-    }
-
-    public static synchronized BiFunction<EventState, Type, TickEvent> createNextProvider() {
-        final int count = overallTickCount++;
-        return (state, type) -> new TickEvent(state, type, count);
     }
 
     public enum Type {

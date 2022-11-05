@@ -57,12 +57,24 @@ public class ProguardTask extends BaritoneGradleTask {
         return url;
     }
 
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
     public String getExtract() {
         return extract;
     }
 
+    public void setExtract(String extract) {
+        this.extract = extract;
+    }
+
     public String getCompType() {
         return compType;
+    }
+
+    public void setCompType(String compType) {
+        this.compType = compType;
     }
 
     @TaskAction
@@ -77,10 +89,6 @@ public class ProguardTask extends BaritoneGradleTask {
         proguardApi();
         proguardStandalone();
         cleanup();
-    }
-
-    public void setCompType(String compType) {
-        this.compType = compType;
     }
 
     private boolean isMcJar(File f) {
@@ -130,8 +138,7 @@ public class ProguardTask extends BaritoneGradleTask {
         try {
             path = findJavaPathByGradleConfig();
             if (path != null) return path;
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             System.err.println("Unable to find java by javaCompile options");
             ex.printStackTrace();
         }
@@ -139,8 +146,7 @@ public class ProguardTask extends BaritoneGradleTask {
         try {
             path = findJavaByJavaHome();
             if (path != null) return path;
-        }
-        catch(Exception ex) {
+        } catch (Exception ex) {
             System.err.println("Unable to find java by JAVA_HOME");
             ex.printStackTrace();
         }
@@ -148,7 +154,7 @@ public class ProguardTask extends BaritoneGradleTask {
 
         path = findJavaByGradleCurrentRuntime();
         if (path != null) return path;
-        
+
         throw new Exception("Unable to find java to determine ProGuard libraryjars. Please specify forkOptions.executable in javaCompile," +
                 " JAVA_HOME environment variable, or make sure to run Gradle with the correct JDK (a v1.8 only)");
     }
@@ -292,15 +298,8 @@ public class ProguardTask extends BaritoneGradleTask {
     private void cleanup() {
         try {
             Files.delete(this.proguardOut);
-        } catch (IOException ignored) {}
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public void setExtract(String extract) {
-        this.extract = extract;
+        } catch (IOException ignored) {
+        }
     }
 
     private void proguardStandalone() throws Exception {

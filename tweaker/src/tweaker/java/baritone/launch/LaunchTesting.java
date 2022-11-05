@@ -82,7 +82,8 @@ public class LaunchTesting {
             final Field sysPathsField = ClassLoader.class.getDeclaredField("sys_paths");
             sysPathsField.setAccessible(true);
             sysPathsField.set(null, null);
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
     }
 
     private static void attemptLogin(Map<String, String> argMap, String username, String password) {

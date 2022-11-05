@@ -52,27 +52,6 @@ public class GoalXZ implements Goal {
         this.z = pos.z;
     }
 
-    @Override
-    public boolean isInGoal(int x, int y, int z) {
-        return x == this.x && z == this.z;
-    }
-
-    @Override
-    public double heuristic(int x, int y, int z) {//mostly copied from GoalBlock
-        int xDiff = x - this.x;
-        int zDiff = z - this.z;
-        return calculate(xDiff, zDiff);
-    }
-
-    @Override
-    public String toString() {
-        return String.format(
-                "GoalXZ{x=%s,z=%s}",
-                SettingsUtil.maybeCensor(x),
-                SettingsUtil.maybeCensor(z)
-        );
-    }
-
     public static double calculate(double xDiff, double zDiff) {
         //This is a combination of pythagorean and manhattan distance
         //It takes into account the fact that pathing can either walk diagonally or forwards
@@ -99,6 +78,27 @@ public class GoalXZ implements Goal {
         double x = origin.x - Mth.sin(theta) * distance;
         double z = origin.z + Mth.cos(theta) * distance;
         return new GoalXZ(Mth.floor(x), Mth.floor(z));
+    }
+
+    @Override
+    public boolean isInGoal(int x, int y, int z) {
+        return x == this.x && z == this.z;
+    }
+
+    @Override
+    public double heuristic(int x, int y, int z) {//mostly copied from GoalBlock
+        int xDiff = x - this.x;
+        int zDiff = z - this.z;
+        return calculate(xDiff, zDiff);
+    }
+
+    @Override
+    public String toString() {
+        return String.format(
+                "GoalXZ{x=%s,z=%s}",
+                SettingsUtil.maybeCensor(x),
+                SettingsUtil.maybeCensor(z)
+        );
     }
 
     public int getX() {

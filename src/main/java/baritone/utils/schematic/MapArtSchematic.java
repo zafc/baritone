@@ -53,11 +53,6 @@ public class MapArtSchematic extends MaskSchematic {
         return heightMap;
     }
 
-    @Override
-    protected boolean partOfMask(int x, int y, int z, BlockState currentState) {
-        return y >= this.heightMap[x][z];
-    }
-
     private static <T> OptionalInt lastIndexMatching(T[] arr, Predicate<? super T> predicate) {
         for (int y = arr.length - 1; y >= 0; y--) {
             if (predicate.test(arr[y])) {
@@ -65,5 +60,10 @@ public class MapArtSchematic extends MaskSchematic {
             }
         }
         return OptionalInt.empty();
+    }
+
+    @Override
+    protected boolean partOfMask(int x, int y, int z, BlockState currentState) {
+        return y >= this.heightMap[x][z];
     }
 }

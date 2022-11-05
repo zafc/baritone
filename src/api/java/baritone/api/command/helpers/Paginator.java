@@ -45,24 +45,6 @@ public class Paginator<E> implements Helper {
         this.entries = Arrays.asList(entries);
     }
 
-    public Paginator<E> setPageSize(int pageSize) {
-        this.pageSize = pageSize;
-        return this;
-    }
-
-    public int getMaxPage() {
-        return (entries.size() - 1) / pageSize + 1;
-    }
-
-    public boolean validPage(int page) {
-        return page > 0 && page <= getMaxPage();
-    }
-
-    public Paginator<E> skipPages(int pages) {
-        page += pages;
-        return this;
-    }
-
     public static <T> void paginate(IArgConsumer consumer, Paginator<T> pagi, Runnable pre, Function<T, Component> transform, String commandPrefix) throws CommandException {
         int page = 1;
         consumer.requireMax(1);
@@ -128,6 +110,24 @@ public class Paginator<E> implements Helper {
 
     public static <T> void paginate(IArgConsumer consumer, T[] elems, Function<T, Component> transform) throws CommandException {
         paginate(consumer, Arrays.asList(elems), null, transform, null);
+    }
+
+    public Paginator<E> setPageSize(int pageSize) {
+        this.pageSize = pageSize;
+        return this;
+    }
+
+    public int getMaxPage() {
+        return (entries.size() - 1) / pageSize + 1;
+    }
+
+    public boolean validPage(int page) {
+        return page > 0 && page <= getMaxPage();
+    }
+
+    public Paginator<E> skipPages(int pages) {
+        page += pages;
+        return this;
     }
 
     public void display(Function<E, Component> transform, String commandPrefix) {

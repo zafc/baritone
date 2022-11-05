@@ -33,7 +33,9 @@ public interface IFarmProcess extends IBaritoneProcess {
     /**
      * Begin to search for nearby crops to farm.
      */
-    default void farm() {farm(0, null);}
+    default void farm() {
+        farm(0, null);
+    }
 
     /**
      * Begin to search for crops to farm with in specified aria
@@ -41,5 +43,7 @@ public interface IFarmProcess extends IBaritoneProcess {
      *
      * @param range The distance to search for crops to farm
      */
-    default void farm(int range) {farm(range, null);}
+    default void farm(int range) {
+        farm(range, null);
+    }
 }

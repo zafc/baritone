@@ -52,22 +52,6 @@ public class MovementTraverse extends Movement {
         super(baritone, from, to, new BetterBlockPos[]{to.above(), to}, to.below());
     }
 
-    @Override
-    public void reset() {
-        super.reset();
-        wasTheBridgeBlockAlwaysThere = true;
-    }
-
-    @Override
-    public double calculateCost(CalculationContext context) {
-        return cost(context, src.x, src.y, src.z, dest.x, dest.z);
-    }
-
-    @Override
-    protected Set<BetterBlockPos> calculateValidPositions() {
-        return ImmutableSet.of(src, dest);
-    }
-
     public static double cost(CalculationContext context, int x, int y, int z, int destX, int destZ) {
         BlockState pb0 = context.get(destX, y + 1, destZ);
         BlockState pb1 = context.get(destX, y, destZ);
@@ -152,6 +136,22 @@ public class MovementTraverse extends Movement {
             }
             return COST_INF;
         }
+    }
+
+    @Override
+    public void reset() {
+        super.reset();
+        wasTheBridgeBlockAlwaysThere = true;
+    }
+
+    @Override
+    public double calculateCost(CalculationContext context) {
+        return cost(context, src.x, src.y, src.z, dest.x, dest.z);
+    }
+
+    @Override
+    protected Set<BetterBlockPos> calculateValidPositions() {
+        return ImmutableSet.of(src, dest);
     }
 
     @Override

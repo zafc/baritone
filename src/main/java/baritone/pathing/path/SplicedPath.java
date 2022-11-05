@@ -43,31 +43,6 @@ public class SplicedPath extends PathBase {
         sanityCheck();
     }
 
-    @Override
-    public Goal getGoal() {
-        return goal;
-    }
-
-    @Override
-    public List<IMovement> movements() {
-        return Collections.unmodifiableList(movements);
-    }
-
-    @Override
-    public List<BetterBlockPos> positions() {
-        return Collections.unmodifiableList(path);
-    }
-
-    @Override
-    public int getNumNodesConsidered() {
-        return numNodes;
-    }
-
-    @Override
-    public int length() {
-        return path.size();
-    }
-
     public static Optional<SplicedPath> trySplice(IPath first, IPath second, boolean allowOverlapCutoff) {
         if (second == null || first == null) {
             return Optional.empty();
@@ -102,5 +77,30 @@ public class SplicedPath extends PathBase {
         positions.addAll(second.positions().subList(positionInSecond + 1, second.length()));
         movements.addAll(second.movements().subList(positionInSecond, second.length() - 1));
         return Optional.of(new SplicedPath(positions, movements, first.getNumNodesConsidered() + second.getNumNodesConsidered(), first.getGoal()));
+    }
+
+    @Override
+    public Goal getGoal() {
+        return goal;
+    }
+
+    @Override
+    public List<IMovement> movements() {
+        return Collections.unmodifiableList(movements);
+    }
+
+    @Override
+    public List<BetterBlockPos> positions() {
+        return Collections.unmodifiableList(path);
+    }
+
+    @Override
+    public int getNumNodesConsidered() {
+        return numNodes;
+    }
+
+    @Override
+    public int length() {
+        return path.size();
     }
 }

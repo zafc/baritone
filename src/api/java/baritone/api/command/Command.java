@@ -39,13 +39,12 @@ import java.util.stream.Stream;
  */
 public abstract class Command implements ICommand {
 
-    protected IBaritone baritone;
-    protected IPlayerContext ctx;
-
     /**
      * The names of this command. This is what you put after the command prefix.
      */
     protected final List<String> names;
+    protected IBaritone baritone;
+    protected IPlayerContext ctx;
 
     /**
      * Creates a new Baritone control command.

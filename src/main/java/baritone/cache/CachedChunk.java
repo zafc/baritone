@@ -133,26 +133,20 @@ public final class CachedChunk {
      * The chunk z coordinate
      */
     public final int z;
-
+    public final long cacheTimestamp;
     /**
      * The actual raw data of this packed chunk.
      * <p>
      * Each block is expressed as 2 bits giving a total of 16 KiB
      */
     private final BitSet data;
-
     private final Int2ObjectOpenHashMap<String> special;
-
     /**
      * The block names of each surface level block for generating an overview
      */
     private final BlockState[] overview;
-
     private final int[] heightMap;
-
     private final Map<String, List<BlockPos>> specialBlockLocations;
-
-    public final long cacheTimestamp;
 
     CachedChunk(int x, int z, int height, BitSet data, BlockState[] overview, Map<String, List<BlockPos>> specialBlockLocations, long cacheTimestamp) {
         this.size = size(height);
@@ -182,6 +176,18 @@ public final class CachedChunk {
 
     public static int sizeInBytes(int size) {
         return size / 8;
+    }
+
+    /**
+     * Returns the raw bit index of the specified position
+     *
+     * @param x The x position
+     * @param y The y position
+     * @param z The z position
+     * @return The bit index
+     */
+    public static int getPositionIndex(int x, int y, int z) {
+        return (x << 1) | (z << 5) | (y << 9);
     }
 
     private final void setSpecial() {
@@ -272,18 +278,6 @@ public final class CachedChunk {
      */
     public final byte[] toByteArray() {
         return this.data.toByteArray();
-    }
-
-    /**
-     * Returns the raw bit index of the specified position
-     *
-     * @param x The x position
-     * @param y The y position
-     * @param z The z position
-     * @return The bit index
-     */
-    public static int getPositionIndex(int x, int y, int z) {
-        return (x << 1) | (z << 5) | (y << 9);
     }
 
     /**

@@ -22,13 +22,6 @@ import baritone.api.pathing.goals.Goal;
 public interface ICustomGoalProcess extends IBaritoneProcess {
 
     /**
-     * Sets the pathing goal
-     *
-     * @param goal The new goal
-     */
-    void setGoal(Goal goal);
-
-    /**
      * Starts path calculation and execution.
      */
     void path();
@@ -37,6 +30,13 @@ public interface ICustomGoalProcess extends IBaritoneProcess {
      * @return The current goal
      */
     Goal getGoal();
+
+    /**
+     * Sets the pathing goal
+     *
+     * @param goal The new goal
+     */
+    void setGoal(Goal goal);
 
     /**
      * Sets the goal and begins the path execution.

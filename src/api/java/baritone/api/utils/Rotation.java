@@ -42,6 +42,33 @@ public class Rotation {
     }
 
     /**
+     * Clamps the specified pitch value between -90 and 90.
+     *
+     * @param pitch The input pitch
+     * @return The clamped pitch
+     */
+    public static float clampPitch(float pitch) {
+        return Math.max(-90, Math.min(90, pitch));
+    }
+
+    /**
+     * Normalizes the specified yaw value between -180 and 180.
+     *
+     * @param yaw The input yaw
+     * @return The normalized yaw
+     */
+    public static float normalizeYaw(float yaw) {
+        float newYaw = yaw % 360F;
+        if (newYaw < -180F) {
+            newYaw += 360F;
+        }
+        if (newYaw > 180F) {
+            newYaw -= 360F;
+        }
+        return newYaw;
+    }
+
+    /**
      * @return The yaw of this rotation
      */
     public float getYaw() {
@@ -126,33 +153,6 @@ public class Rotation {
     public boolean yawIsReallyClose(Rotation other) {
         float yawDiff = Math.abs(normalizeYaw(yaw) - normalizeYaw(other.yaw)); // you cant fool me
         return (yawDiff < 0.01 || yawDiff > 359.99);
-    }
-
-    /**
-     * Clamps the specified pitch value between -90 and 90.
-     *
-     * @param pitch The input pitch
-     * @return The clamped pitch
-     */
-    public static float clampPitch(float pitch) {
-        return Math.max(-90, Math.min(90, pitch));
-    }
-
-    /**
-     * Normalizes the specified yaw value between -180 and 180.
-     *
-     * @param yaw The input yaw
-     * @return The normalized yaw
-     */
-    public static float normalizeYaw(float yaw) {
-        float newYaw = yaw % 360F;
-        if (newYaw < -180F) {
-            newYaw += 360F;
-        }
-        if (newYaw > 180F) {
-            newYaw -= 360F;
-        }
-        return newYaw;
     }
 
     @Override

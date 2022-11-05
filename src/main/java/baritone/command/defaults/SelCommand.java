@@ -192,7 +192,7 @@ public class SelCommand extends Command {
                         }
                     }
                 }
-                ISchematic schematic = new StaticSchematic(){{
+                ISchematic schematic = new StaticSchematic() {{
                     states = blockstates;
                     x = size.getX();
                     y = size.getY();
@@ -368,10 +368,6 @@ public class SelCommand extends Command {
             this.names = names;
         }
 
-        public ISelection[] transform(ISelection[] selections) {
-            return transform.apply(selections);
-        }
-
         public static TransformTarget getByName(String name) {
             for (TransformTarget target : TransformTarget.values()) {
                 for (String alias : target.names) {
@@ -389,6 +385,10 @@ public class SelCommand extends Command {
                 names.addAll(Arrays.asList(target.names));
             }
             return names.toArray(new String[0]);
+        }
+
+        public ISelection[] transform(ISelection[] selections) {
+            return transform.apply(selections);
         }
     }
 }

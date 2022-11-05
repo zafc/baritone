@@ -34,9 +34,8 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
  */
 public class CreateDistTask extends BaritoneGradleTask {
 
-    private static MessageDigest SHA1_DIGEST;
-
     private static final byte[] HEX_ARRAY = "0123456789ABCDEF".getBytes(StandardCharsets.US_ASCII);
+    private static MessageDigest SHA1_DIGEST;
 
     private static String getFileName(Path p) {
         return p.getFileName().toString();

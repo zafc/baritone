@@ -43,19 +43,19 @@ public final class RotationMoveEvent {
     }
 
     /**
+     * @return The yaw rotation
+     */
+    public final float getYaw() {
+        return this.yaw;
+    }
+
+    /**
      * Set the yaw movement rotation
      *
      * @param yaw Yaw rotation
      */
     public final void setYaw(float yaw) {
         this.yaw = yaw;
-    }
-
-    /**
-     * @return The yaw rotation
-     */
-    public final float getYaw() {
-        return this.yaw;
     }
 
     /**

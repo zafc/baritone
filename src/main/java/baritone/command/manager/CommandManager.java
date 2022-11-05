@@ -52,6 +52,16 @@ public class CommandManager implements ICommandManager {
         DefaultCommands.createAll(baritone).forEach(this.registry::register);
     }
 
+    private static Tuple<String, List<ICommandArgument>> expand(String string, boolean preserveEmptyLast) {
+        String label = string.split("\\s", 2)[0];
+        List<ICommandArgument> args = CommandArguments.from(string.substring(label.length()), preserveEmptyLast);
+        return new Tuple<>(label, args);
+    }
+
+    public static Tuple<String, List<ICommandArgument>> expand(String string) {
+        return expand(string, false);
+    }
+
     @Override
     public IBaritone getBaritone() {
         return this.baritone;
@@ -113,16 +123,6 @@ public class CommandManager implements ICommandManager {
 
         ICommand command = this.getCommand(label);
         return command == null ? null : new ExecutionWrapper(command, label, args);
-    }
-
-    private static Tuple<String, List<ICommandArgument>> expand(String string, boolean preserveEmptyLast) {
-        String label = string.split("\\s", 2)[0];
-        List<ICommandArgument> args = CommandArguments.from(string.substring(label.length()), preserveEmptyLast);
-        return new Tuple<>(label, args);
-    }
-
-    public static Tuple<String, List<ICommandArgument>> expand(String string) {
-        return expand(string, false);
     }
 
     private static final class ExecutionWrapper {

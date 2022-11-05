@@ -135,9 +135,12 @@ Magic. (Hours of [leijurv](https://github.com/leijurv/) enduring excruciating pa
 
 ![YourKit-Logo](https://www.yourkit.com/images/yklogo.png)
 
-YourKit supports open source projects with innovative and intelligent tools for monitoring and profiling Java and .NET applications.
+YourKit supports open source projects with innovative and intelligent tools for monitoring and profiling Java and .NET
+applications.
 
-YourKit is the creator of the [YourKit Java Profiler](https://www.yourkit.com/java/profiler/), [YourKit .NET Profiler](https://www.yourkit.com/.net/profiler/), and [YourKit YouMonitor](https://www.yourkit.com/youmonitor/).
+YourKit is the creator of the [YourKit Java Profiler](https://www.yourkit.com/java/profiler/)
+, [YourKit .NET Profiler](https://www.yourkit.com/.net/profiler/),
+and [YourKit YouMonitor](https://www.yourkit.com/youmonitor/).
 
 We thank them for granting Baritone an OSS license so that we can make our software the best it can be.
 

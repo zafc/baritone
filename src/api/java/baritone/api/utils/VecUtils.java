@@ -32,7 +32,8 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  */
 public final class VecUtils {
 
-    private VecUtils() {}
+    private VecUtils() {
+    }
 
     /**
      * Calculates the center of the block at the specified position's bounding box

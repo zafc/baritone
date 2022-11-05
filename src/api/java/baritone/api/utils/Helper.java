@@ -39,7 +39,8 @@ public interface Helper {
     /**
      * Instance of {@link Helper}. Used for static-context reference.
      */
-    Helper HELPER = new Helper() {};
+    Helper HELPER = new Helper() {
+    };
 
     /**
      * Instance of the game

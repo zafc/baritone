@@ -21,16 +21,16 @@ import baritone.api.BaritoneAPI;
 import baritone.api.IBaritone;
 import baritone.api.event.events.ChatEvent;
 import baritone.utils.accessor.IGuiScreen;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Style;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
-
-import java.net.URI;
-import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.net.URI;
 
 @Mixin(Screen.class)
 public abstract class MixinScreen implements IGuiScreen {

@@ -53,14 +53,6 @@ import java.util.function.Predicate;
 
 public final class FarmProcess extends BaritoneProcessHelper implements IFarmProcess {
 
-    private boolean active;
-
-    private List<BlockPos> locations;
-    private int tickCount;
-
-    private int range;
-    private BlockPos center;
-
     private static final List<Item> FARMLAND_PLANTABLE = Arrays.asList(
             Items.BEETROOT_SEEDS,
             Items.MELON_SEEDS,
@@ -69,7 +61,6 @@ public final class FarmProcess extends BaritoneProcessHelper implements IFarmPro
             Items.POTATO,
             Items.CARROT
     );
-
     private static final List<Item> PICKUP_DROPPED = Arrays.asList(
             Items.BEETROOT_SEEDS,
             Items.BEETROOT,
@@ -86,6 +77,11 @@ public final class FarmProcess extends BaritoneProcessHelper implements IFarmPro
             Blocks.SUGAR_CANE.asItem(),
             Blocks.CACTUS.asItem()
     );
+    private boolean active;
+    private List<BlockPos> locations;
+    private int tickCount;
+    private int range;
+    private BlockPos center;
 
     public FarmProcess(Baritone baritone) {
         super(baritone);
@@ -263,6 +259,16 @@ public final class FarmProcess extends BaritoneProcessHelper implements IFarmPro
         return !stack.isEmpty() && stack.getItem().equals(Items.NETHER_WART);
     }
 
+    @Override
+    public void onLostControl() {
+        active = false;
+    }
+
+    @Override
+    public String displayName0() {
+        return "Farming";
+    }
+
     private enum Harvest {
         WHEAT((CropBlock) Blocks.WHEAT),
         CARROTS((CropBlock) Blocks.CARROTS),
@@ -305,15 +311,5 @@ public final class FarmProcess extends BaritoneProcessHelper implements IFarmPro
         public boolean readyToHarvest(Level world, BlockPos pos, BlockState state) {
             return readyToHarvest.test(state);
         }
-    }
-
-    @Override
-    public void onLostControl() {
-        active = false;
-    }
-
-    @Override
-    public String displayName0() {
-        return "Farming";
     }
 }

@@ -2,11 +2,16 @@
 
 # Prefix
 
-Baritone's chat control prefix is `#` by default. In Impact, you can also use `.b` as a prefix. (for example, `.b click` instead of `#click`)
+Baritone's chat control prefix is `#` by default. In Impact, you can also use `.b` as a prefix. (for example, `.b click`
+instead of `#click`)
 
-Baritone commands can also by default be typed in the chatbox. However if you make a typo, like typing "gola 10000 10000" instead of "goal" it goes into public chat, which is bad, so using `#` is suggested.
+Baritone commands can also by default be typed in the chatbox. However if you make a typo, like typing "gola 10000
+10000" instead of "goal" it goes into public chat, which is bad, so using `#` is suggested.
 
-To disable direct chat control (with no prefix), turn off the `chatControl` setting. To disable chat control with the `#` prefix, turn off the `prefixControl` setting. In Impact, `.b` cannot be disabled. Be careful that you don't leave yourself with all control methods disabled (if you do, reset your settings by deleting the file `minecraft/baritone/settings.txt` and relaunching).
+To disable direct chat control (with no prefix), turn off the `chatControl` setting. To disable chat control with
+the `#` prefix, turn off the `prefixControl` setting. In Impact, `.b` cannot be disabled. Be careful that you don't
+leave yourself with all control methods disabled (if you do, reset your settings by deleting the
+file `minecraft/baritone/settings.txt` and relaunching).
 
 # For Baritone 1.2.10+, 1.3.5+, 1.4.2+
 
@@ -16,7 +21,7 @@ Try `#help` I promise it won't just send you back here =)
 
 "wtf where is cleararea" -> look at `#help sel`
 
-"wtf where is goto death, goto waypoint" -> look at `#help wp` 
+"wtf where is goto death, goto waypoint" -> look at `#help wp`
 
 just look at `#help` lmao
 
@@ -87,9 +92,14 @@ Commands in Baritone:
 - `version` to get the version of Baritone you're running
 - `damn` daniel
 
-All the settings and documentation are <a href="https://github.com/cabaletta/baritone/blob/master/src/api/java/baritone/api/Settings.java">here</a>. If you find HTML easier to read than Javadoc, you can look <a href="https://baritone.leijurv.com/baritone/api/Settings.html#field.detail">here</a>.
+All the settings and documentation
+are <a href="https://github.com/cabaletta/baritone/blob/master/src/api/java/baritone/api/Settings.java">here</a>. If you
+find HTML easier to read than Javadoc, you can
+look <a href="https://baritone.leijurv.com/baritone/api/Settings.html#field.detail">here</a>.
 
-There are about a hundred settings, but here are some fun / interesting / important ones that you might want to look at changing in normal usage of Baritone. The documentation for each can be found at the above links.
+There are about a hundred settings, but here are some fun / interesting / important ones that you might want to look at
+changing in normal usage of Baritone. The documentation for each can be found at the above links.
+
 - `allowBreak`
 - `allowSprint`
 - `allowPlace`
@@ -109,22 +119,24 @@ There are about a hundred settings, but here are some fun / interesting / import
 - `mineScanDroppedItems`
 - `allowDiagonalAscend`
 
-
-
-
 # Troubleshooting / common issues
 
 ## Why doesn't Baritone respond to any of my chat commands?
+
 This could be one of many things.
 
-First, make sure it's actually installed. An easy way to check is seeing if it created the folder `baritone` in your Minecraft folder.
+First, make sure it's actually installed. An easy way to check is seeing if it created the folder `baritone` in your
+Minecraft folder.
 
 Second, make sure that you're using the prefix properly, and that chat control is enabled in the way you expect.
 
-For example, Impact disables direct chat control. (i.e. anything typed in chat without a prefix will be ignored and sent publicly). **This is a saved setting**, so if you run Impact once, `chatControl` will be off from then on, **even in other clients**.
-So you'll need to use the `#` prefix or edit `baritone/settings.txt` in your Minecraft folder to undo that (specifically, remove the line `chatControl false` then restart your client).
-
+For example, Impact disables direct chat control. (i.e. anything typed in chat without a prefix will be ignored and sent
+publicly). **This is a saved setting**, so if you run Impact once, `chatControl` will be off from then on, **even in
+other clients**.
+So you'll need to use the `#` prefix or edit `baritone/settings.txt` in your Minecraft folder to undo that (
+specifically, remove the line `chatControl false` then restart your client).
 
 ## Why can I do `.goto x z` in Impact but nowhere else? Why can I do `-path to x z` in KAMI but nowhere else?
+
 These are custom commands that they added; those aren't from Baritone.
 The equivalent you're looking for is `goto x z`.

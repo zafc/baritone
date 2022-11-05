@@ -76,7 +76,8 @@ public interface ISchematic {
     /**
      * Resets possible caches to avoid wrong behavior when moving the schematic around
      */
-    default void reset() {}
+    default void reset() {
+    }
 
     /**
      * @return The width (X axis length) of this schematic

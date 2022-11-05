@@ -27,6 +27,12 @@ public class CompositeSchematic extends AbstractSchematic {
     private final List<CompositeSchematicEntry> schematics;
     private CompositeSchematicEntry[] schematicArr;
 
+    public CompositeSchematic(int x, int y, int z) {
+        super(x, y, z);
+        schematics = new ArrayList<>();
+        recalcArr();
+    }
+
     private void recalcArr() {
         schematicArr = schematics.toArray(new CompositeSchematicEntry[0]);
         for (CompositeSchematicEntry entry : schematicArr) {
@@ -34,12 +40,6 @@ public class CompositeSchematic extends AbstractSchematic {
             this.y = Math.max(y, entry.y + entry.schematic.heightY());
             this.z = Math.max(z, entry.z + entry.schematic.lengthZ());
         }
-    }
-
-    public CompositeSchematic(int x, int y, int z) {
-        super(x, y, z);
-        schematics = new ArrayList<>();
-        recalcArr();
     }
 
     public void put(ISchematic extra, int x, int y, int z) {

@@ -43,15 +43,14 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 public class BlockStateInterface {
 
     private static final BlockState AIR = Blocks.AIR.defaultBlockState();
-    private final WorldData worldData;
     public final BlockGetter access;
     public final BlockPos.MutableBlockPos isPassableBlockPos;
     public final BetterWorldBorder worldBorder;
     protected final Level world;
+    private final WorldData worldData;
     private final ClientChunkCache provider;
-    private CachedRegion prevCached = null;
-
     private final boolean useTheRealWorld;
+    private CachedRegion prevCached = null;
     private LevelChunk prev = null;
 
     public BlockStateInterface(IPlayerContext ctx) {

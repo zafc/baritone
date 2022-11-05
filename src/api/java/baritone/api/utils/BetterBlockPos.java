@@ -70,11 +70,6 @@ public final class BetterBlockPos extends BlockPos {
         return new BetterBlockPos(pos);
     }
 
-    @Override
-    public int hashCode() {
-        return (int) longHash(x, y, z);
-    }
-
     public static long longHash(BetterBlockPos pos) {
         return longHash(pos.x, pos.y, pos.z);
     }
@@ -98,6 +93,11 @@ public final class BetterBlockPos extends BlockPos {
         hash = 8734625L * hash + y;
         hash = 2873465L * hash + z;
         return hash;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) longHash(x, y, z);
     }
 
     @Override

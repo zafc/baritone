@@ -57,16 +57,6 @@ public class MovementFall extends Movement {
         super(baritone, src, dest, MovementFall.buildPositionsToBreak(src, dest));
     }
 
-    @Override
-    public double calculateCost(CalculationContext context) {
-        MutableMoveResult result = new MutableMoveResult();
-        MovementDescend.cost(context, src.x, src.y, src.z, dest.x, dest.z, result);
-        if (result.y != dest.y) {
-            return COST_INF; // doesn't apply to us, this position is a descend not a fall
-        }
-        return result.cost;
-    }
-
     private static BetterBlockPos[] buildPositionsToBreak(BetterBlockPos src, BetterBlockPos dest) {
         BetterBlockPos[] toBreak;
         int diffX = src.getX() - dest.getX();
@@ -77,6 +67,16 @@ public class MovementFall extends Movement {
             toBreak[i] = new BetterBlockPos(src.getX() - diffX, src.getY() + 1 - i, src.getZ() - diffZ);
         }
         return toBreak;
+    }
+
+    @Override
+    public double calculateCost(CalculationContext context) {
+        MutableMoveResult result = new MutableMoveResult();
+        MovementDescend.cost(context, src.x, src.y, src.z, dest.x, dest.z, result);
+        if (result.y != dest.y) {
+            return COST_INF; // doesn't apply to us, this position is a descend not a fall
+        }
+        return result.cost;
     }
 
     private boolean willPlaceBucket() {

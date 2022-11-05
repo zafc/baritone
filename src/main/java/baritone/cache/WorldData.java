@@ -33,10 +33,10 @@ import java.nio.file.Path;
 public class WorldData implements IWorldData {
 
     public final CachedWorld cache;
-    private final WaypointCollection waypoints;
     //public final MapData map;
     public final Path directory;
     public final DimensionType dimension;
+    private final WaypointCollection waypoints;
 
     WorldData(Path directory, DimensionType dimension) {
         this.directory = directory;
