@@ -59,6 +59,14 @@ public interface IBuilderProcess extends IBaritoneProcess {
         return build(schematicFile, file, origin);
     }
 
+    Vec3i getSchemSize();
+
+    void popStack();
+
+    boolean clearState();
+
+    boolean isFromAltoclefFinished();
+
     void build(String name, ISchematic schematic, Vec3i origin, boolean fromAltoclef);
 
     boolean build(String name, File schematic, Vec3i origin, boolean fromAltoclef);
@@ -68,14 +76,6 @@ public interface IBuilderProcess extends IBaritoneProcess {
     void pause();
 
     boolean isPaused();
-
-    Vec3i getSchemSize();
-
-    void popStack();
-
-    boolean clearState();
-
-    boolean isFromAltoclefFinished();
 
     void resume();
 
