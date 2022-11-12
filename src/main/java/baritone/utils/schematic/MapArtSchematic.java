@@ -34,6 +34,11 @@ public class MapArtSchematic extends MaskSchematic {
         this.heightMap = generateHeightMap(schematic);
     }
 
+    @Override
+    protected boolean partOfMask(int x, int y, int z, BlockState currentState) {
+        return y >= this.heightMap[x][z];
+    }
+
     private static int[][] generateHeightMap(IStaticSchematic schematic) {
         int[][] heightMap = new int[schematic.widthX()][schematic.lengthZ()];
 
@@ -60,10 +65,5 @@ public class MapArtSchematic extends MaskSchematic {
             }
         }
         return OptionalInt.empty();
-    }
-
-    @Override
-    protected boolean partOfMask(int x, int y, int z, BlockState currentState) {
-        return y >= this.heightMap[x][z];
     }
 }

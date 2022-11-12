@@ -39,6 +39,22 @@ public class MovementDownward extends Movement {
         super(baritone, start, end, new BetterBlockPos[]{end});
     }
 
+    @Override
+    public void reset() {
+        super.reset();
+        numTicks = 0;
+    }
+
+    @Override
+    public double calculateCost(CalculationContext context) {
+        return cost(context, src.x, src.y, src.z);
+    }
+
+    @Override
+    protected Set<BetterBlockPos> calculateValidPositions() {
+        return ImmutableSet.of(src, dest);
+    }
+
     public static double cost(CalculationContext context, int x, int y, int z) {
         if (!context.allowDownward) {
             return COST_INF;
@@ -54,22 +70,6 @@ public class MovementDownward extends Movement {
             // we're standing on it, while it might be block falling, it'll be air by the time we get here in the movement
             return FALL_N_BLOCKS_COST[1] + MovementHelper.getMiningDurationTicks(context, x, y - 1, z, down, false);
         }
-    }
-
-    @Override
-    public void reset() {
-        super.reset();
-        numTicks = 0;
-    }
-
-    @Override
-    public double calculateCost(CalculationContext context) {
-        return cost(context, src.x, src.y, src.z);
-    }
-
-    @Override
-    protected Set<BetterBlockPos> calculateValidPositions() {
-        return ImmutableSet.of(src, dest);
     }
 
     @Override

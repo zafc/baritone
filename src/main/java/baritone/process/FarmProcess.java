@@ -53,6 +53,14 @@ import java.util.function.Predicate;
 
 public final class FarmProcess extends BaritoneProcessHelper implements IFarmProcess {
 
+    private boolean active;
+
+    private List<BlockPos> locations;
+    private int tickCount;
+
+    private int range;
+    private BlockPos center;
+
     private static final List<Item> FARMLAND_PLANTABLE = Arrays.asList(
             Items.BEETROOT_SEEDS,
             Items.MELON_SEEDS,
@@ -61,6 +69,7 @@ public final class FarmProcess extends BaritoneProcessHelper implements IFarmPro
             Items.POTATO,
             Items.CARROT
     );
+
     private static final List<Item> PICKUP_DROPPED = Arrays.asList(
             Items.BEETROOT_SEEDS,
             Items.BEETROOT,
@@ -77,11 +86,6 @@ public final class FarmProcess extends BaritoneProcessHelper implements IFarmPro
             Blocks.SUGAR_CANE.asItem(),
             Blocks.CACTUS.asItem()
     );
-    private boolean active;
-    private List<BlockPos> locations;
-    private int tickCount;
-    private int range;
-    private BlockPos center;
 
     public FarmProcess(Baritone baritone) {
         super(baritone);
@@ -104,6 +108,10 @@ public final class FarmProcess extends BaritoneProcessHelper implements IFarmPro
         locations = null;
     }
 
+    private boolean isPlantable(ItemStack stack) {
+        return FARMLAND_PLANTABLE.contains(stack.getItem());
+    }
+
     private boolean readyForHarvest(Level world, BlockPos pos, BlockState state) {
         for (Harvest harvest : Harvest.values()) {
             if (harvest.block == state.getBlock()) {
@@ -113,12 +121,56 @@ public final class FarmProcess extends BaritoneProcessHelper implements IFarmPro
         return false;
     }
 
+    private boolean isNetherWart(ItemStack stack) {
+        return !stack.isEmpty() && stack.getItem().equals(Items.NETHER_WART);
+    }
+
     private boolean isBoneMeal(ItemStack stack) {
         return !stack.isEmpty() && stack.getItem().equals(Items.BONE_MEAL);
     }
 
-    private boolean isPlantable(ItemStack stack) {
-        return FARMLAND_PLANTABLE.contains(stack.getItem());
+    private enum Harvest {
+        WHEAT((CropBlock) Blocks.WHEAT),
+        CARROTS((CropBlock) Blocks.CARROTS),
+        POTATOES((CropBlock) Blocks.POTATOES),
+        BEETROOT((CropBlock) Blocks.BEETROOTS),
+        PUMPKIN(Blocks.PUMPKIN, state -> true),
+        MELON(Blocks.MELON, state -> true),
+        NETHERWART(Blocks.NETHER_WART, state -> state.getValue(NetherWartBlock.AGE) >= 3),
+        SUGARCANE(Blocks.SUGAR_CANE, null) {
+            @Override
+            public boolean readyToHarvest(Level world, BlockPos pos, BlockState state) {
+                if (Baritone.settings().replantCrops.value) {
+                    return world.getBlockState(pos.below()).getBlock() instanceof SugarCaneBlock;
+                }
+                return true;
+            }
+        },
+        CACTUS(Blocks.CACTUS, null) {
+            @Override
+            public boolean readyToHarvest(Level world, BlockPos pos, BlockState state) {
+                if (Baritone.settings().replantCrops.value) {
+                    return world.getBlockState(pos.below()).getBlock() instanceof CactusBlock;
+                }
+                return true;
+            }
+        };
+        public final Block block;
+        public final Predicate<BlockState> readyToHarvest;
+
+        Harvest(CropBlock blockCrops) {
+            this(blockCrops, blockCrops::isMaxAge);
+            // max age is 7 for wheat, carrots, and potatoes, but 3 for beetroot
+        }
+
+        Harvest(Block block, Predicate<BlockState> readyToHarvest) {
+            this.block = block;
+            this.readyToHarvest = readyToHarvest;
+        }
+
+        public boolean readyToHarvest(Level world, BlockPos pos, BlockState state) {
+            return readyToHarvest.test(state);
+        }
     }
 
     @Override
@@ -255,10 +307,6 @@ public final class FarmProcess extends BaritoneProcessHelper implements IFarmPro
         return new PathingCommand(new GoalComposite(goalz.toArray(new Goal[0])), PathingCommandType.SET_GOAL_AND_PATH);
     }
 
-    private boolean isNetherWart(ItemStack stack) {
-        return !stack.isEmpty() && stack.getItem().equals(Items.NETHER_WART);
-    }
-
     @Override
     public void onLostControl() {
         active = false;
@@ -267,49 +315,5 @@ public final class FarmProcess extends BaritoneProcessHelper implements IFarmPro
     @Override
     public String displayName0() {
         return "Farming";
-    }
-
-    private enum Harvest {
-        WHEAT((CropBlock) Blocks.WHEAT),
-        CARROTS((CropBlock) Blocks.CARROTS),
-        POTATOES((CropBlock) Blocks.POTATOES),
-        BEETROOT((CropBlock) Blocks.BEETROOTS),
-        PUMPKIN(Blocks.PUMPKIN, state -> true),
-        MELON(Blocks.MELON, state -> true),
-        NETHERWART(Blocks.NETHER_WART, state -> state.getValue(NetherWartBlock.AGE) >= 3),
-        SUGARCANE(Blocks.SUGAR_CANE, null) {
-            @Override
-            public boolean readyToHarvest(Level world, BlockPos pos, BlockState state) {
-                if (Baritone.settings().replantCrops.value) {
-                    return world.getBlockState(pos.below()).getBlock() instanceof SugarCaneBlock;
-                }
-                return true;
-            }
-        },
-        CACTUS(Blocks.CACTUS, null) {
-            @Override
-            public boolean readyToHarvest(Level world, BlockPos pos, BlockState state) {
-                if (Baritone.settings().replantCrops.value) {
-                    return world.getBlockState(pos.below()).getBlock() instanceof CactusBlock;
-                }
-                return true;
-            }
-        };
-        public final Block block;
-        public final Predicate<BlockState> readyToHarvest;
-
-        Harvest(CropBlock blockCrops) {
-            this(blockCrops, blockCrops::isMaxAge);
-            // max age is 7 for wheat, carrots, and potatoes, but 3 for beetroot
-        }
-
-        Harvest(Block block, Predicate<BlockState> readyToHarvest) {
-            this.block = block;
-            this.readyToHarvest = readyToHarvest;
-        }
-
-        public boolean readyToHarvest(Level world, BlockPos pos, BlockState state) {
-            return readyToHarvest.test(state);
-        }
     }
 }

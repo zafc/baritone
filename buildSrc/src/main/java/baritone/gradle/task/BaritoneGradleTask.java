@@ -46,11 +46,12 @@ class BaritoneGradleTask extends DefaultTask {
             ARTIFACT_UNOPTIMIZED = "%s-unoptimized-%s.jar",
             ARTIFACT_API = "%s-api-%s.jar",
             ARTIFACT_STANDALONE = "%s-standalone-%s.jar";
+
+    protected String artifactName, artifactVersion;
     protected final Path
             artifactPath,
             artifactUnoptimizedPath, artifactApiPath, artifactStandalonePath, // these are different for forge builds
             proguardOut;
-    protected String artifactName, artifactVersion;
 
     public BaritoneGradleTask() {
         this.artifactName = getProject().getProperties().get("archivesBaseName").toString();

@@ -33,10 +33,6 @@ import java.util.stream.Stream;
 public enum NearbyPlayer implements IDatatypeFor<Player> {
     INSTANCE;
 
-    private static List<? extends Player> getPlayers(IDatatypeContext ctx) {
-        return ctx.getBaritone().getPlayerContext().world().players();
-    }
-
     @Override
     public Player get(IDatatypeContext ctx) throws CommandException {
         final String username = ctx.getConsumer().getString();
@@ -52,5 +48,9 @@ public enum NearbyPlayer implements IDatatypeFor<Player> {
                 .filterPrefix(ctx.getConsumer().getString())
                 .sortAlphabetically()
                 .stream();
+    }
+
+    private static List<? extends Player> getPlayers(IDatatypeContext ctx) {
+        return ctx.getBaritone().getPlayerContext().world().players();
     }
 }

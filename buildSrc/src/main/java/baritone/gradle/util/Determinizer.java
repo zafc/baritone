@@ -39,6 +39,56 @@ import java.util.stream.Collectors;
  */
 public class Determinizer {
 
+    public static void determinize(String inputPath, String outputPath) throws IOException {
+        System.out.println("Running Determinizer");
+        System.out.println(" Input path: " + inputPath);
+        System.out.println(" Output path: " + outputPath);
+
+        try (
+                JarFile jarFile = new JarFile(new File(inputPath));
+                JarOutputStream jos = new JarOutputStream(new FileOutputStream(new File(outputPath)))
+        ) {
+
+            List<JarEntry> entries = jarFile.stream()
+                    .sorted(Comparator.comparing(JarEntry::getName))
+                    .collect(Collectors.toList());
+
+            for (JarEntry entry : entries) {
+                if (entry.getName().equals("META-INF/fml_cache_annotation.json")) {
+                    continue;
+                }
+                if (entry.getName().equals("META-INF/fml_cache_class_versions.json")) {
+                    continue;
+                }
+                JarEntry clone = new JarEntry(entry.getName());
+                clone.setTime(42069);
+                jos.putNextEntry(clone);
+                if (entry.getName().endsWith(".refmap.json")) {
+                    JsonObject object = new JsonParser().parse(new InputStreamReader(jarFile.getInputStream(entry))).getAsJsonObject();
+                    jos.write(writeSorted(object).getBytes());
+                } else {
+                    copy(jarFile.getInputStream(entry), jos);
+                }
+            }
+            jos.finish();
+        }
+    }
+
+    private static void copy(InputStream is, OutputStream os) throws IOException {
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = is.read(buffer)) != -1) {
+            os.write(buffer, 0, len);
+        }
+    }
+
+    private static String writeSorted(JsonObject in) throws IOException {
+        StringWriter writer = new StringWriter();
+        JsonWriter jw = new JsonWriter(writer);
+        ORDERED_JSON_WRITER.write(jw, in);
+        return writer.toString() + "\n";
+    }
+
     /**
      * All credits go to GSON and its contributors. GSON is licensed under the Apache 2.0 License.
      * This implementation has been modified to write {@link JsonObject} keys in order.
@@ -90,54 +140,4 @@ public class Determinizer {
             }
         }
     };
-
-    public static void determinize(String inputPath, String outputPath) throws IOException {
-        System.out.println("Running Determinizer");
-        System.out.println(" Input path: " + inputPath);
-        System.out.println(" Output path: " + outputPath);
-
-        try (
-                JarFile jarFile = new JarFile(new File(inputPath));
-                JarOutputStream jos = new JarOutputStream(new FileOutputStream(new File(outputPath)))
-        ) {
-
-            List<JarEntry> entries = jarFile.stream()
-                    .sorted(Comparator.comparing(JarEntry::getName))
-                    .collect(Collectors.toList());
-
-            for (JarEntry entry : entries) {
-                if (entry.getName().equals("META-INF/fml_cache_annotation.json")) {
-                    continue;
-                }
-                if (entry.getName().equals("META-INF/fml_cache_class_versions.json")) {
-                    continue;
-                }
-                JarEntry clone = new JarEntry(entry.getName());
-                clone.setTime(42069);
-                jos.putNextEntry(clone);
-                if (entry.getName().endsWith(".refmap.json")) {
-                    JsonObject object = new JsonParser().parse(new InputStreamReader(jarFile.getInputStream(entry))).getAsJsonObject();
-                    jos.write(writeSorted(object).getBytes());
-                } else {
-                    copy(jarFile.getInputStream(entry), jos);
-                }
-            }
-            jos.finish();
-        }
-    }
-
-    private static void copy(InputStream is, OutputStream os) throws IOException {
-        byte[] buffer = new byte[1024];
-        int len;
-        while ((len = is.read(buffer)) != -1) {
-            os.write(buffer, 0, len);
-        }
-    }
-
-    private static String writeSorted(JsonObject in) throws IOException {
-        StringWriter writer = new StringWriter();
-        JsonWriter jw = new JsonWriter(writer);
-        ORDERED_JSON_WRITER.write(jw, in);
-        return writer.toString() + "\n";
-    }
 }

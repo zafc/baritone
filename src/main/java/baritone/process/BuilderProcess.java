@@ -89,6 +89,12 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
     private boolean paused;
     private int layer;
     private int numRepeats;
+    private List<BlockState> approxPlaceable;
+    private Map<BlockState, Integer> missing;
+    private boolean active;
+    private Stack<Object> stateStack = new Stack<>();
+    private Vec3i schemSize;
+    private boolean fromAltoclefFinished;
     public static final Set<Property<?>> orientationProps =
             ImmutableSet.of(
                     RotatedPillarBlock.AXIS, HorizontalDirectionalBlock.FACING,
@@ -114,37 +120,9 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
             return property.getName((T) comparable);
         }
     };
-    private List<BlockState> approxPlaceable;
-    private Map<BlockState, Integer> missing;
-    private boolean active;
-    private Stack<Object> stateStack = new Stack<>();
-    private Vec3i schemSize;
-    private boolean fromAltoclefFinished;
 
     public BuilderProcess(Baritone baritone) {
         super(baritone);
-    }
-
-    private boolean fromAltoclef;
-    private Map<BlockState, Integer> sbtMissing;
-    private Map<BlockPos, HistoryInfo> blockBreakHistory = new HashMap<>();
-
-    private static Vec3[] aabbSideMultipliers(Direction side) {
-        switch (side) {
-            case UP:
-                return new Vec3[]{new Vec3(0.5, 1, 0.5), new Vec3(0.1, 1, 0.5), new Vec3(0.9, 1, 0.5), new Vec3(0.5, 1, 0.1), new Vec3(0.5, 1, 0.9)};
-            case DOWN:
-                return new Vec3[]{new Vec3(0.5, 0, 0.5), new Vec3(0.1, 0, 0.5), new Vec3(0.9, 0, 0.5), new Vec3(0.5, 0, 0.1), new Vec3(0.5, 0, 0.9)};
-            case NORTH:
-            case SOUTH:
-            case EAST:
-            case WEST:
-                double x = side.getStepX() == 0 ? 0.5 : (1 + side.getStepX()) / 2D;
-                double z = side.getStepZ() == 0 ? 0.5 : (1 + side.getStepZ()) / 2D;
-                return new Vec3[]{new Vec3(x, 0.25, z), new Vec3(x, 0.75, z)};
-            default: // null
-                throw new IllegalStateException();
-        }
     }
 
     @Override
@@ -239,15 +217,6 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         stateStack.push(this.fromAltoclef);
     }
 
-    public void pause() {
-        paused = true;
-    }
-
-    @Override
-    public boolean isPaused() {
-        return paused;
-    }
-
     @Override
     public void popStack() {
         if (this.stateStack.isEmpty()) {
@@ -279,6 +248,40 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         }
     }
 
+    private boolean fromAltoclef;
+    private Map<BlockState, Integer> sbtMissing;
+    private Map<BlockPos, HistoryInfo> blockBreakHistory = new HashMap<>();
+
+    private static Vec3[] aabbSideMultipliers(Direction side) {
+        switch (side) {
+            case UP:
+                return new Vec3[]{new Vec3(0.5, 1, 0.5), new Vec3(0.1, 1, 0.5), new Vec3(0.9, 1, 0.5), new Vec3(0.5, 1, 0.1), new Vec3(0.5, 1, 0.9)};
+            case DOWN:
+                return new Vec3[]{new Vec3(0.5, 0, 0.5), new Vec3(0.1, 0, 0.5), new Vec3(0.9, 0, 0.5), new Vec3(0.5, 0, 0.1), new Vec3(0.5, 0, 0.9)};
+            case NORTH:
+            case SOUTH:
+            case EAST:
+            case WEST:
+                double x = side.getStepX() == 0 ? 0.5 : (1 + side.getStepX()) / 2D;
+                double z = side.getStepZ() == 0 ? 0.5 : (1 + side.getStepZ()) / 2D;
+                return new Vec3[]{new Vec3(x, 0.25, z), new Vec3(x, 0.75, z)};
+            default: // null
+                throw new IllegalStateException();
+        }
+    }
+
+    @Override
+    public boolean clearState() {
+        final boolean isEmpty = !stateStack.isEmpty();
+        stateStack.clear();
+        return isEmpty;
+    }
+
+    @Override
+    public boolean isFromAltoclefFinished() {
+        return this.fromAltoclefFinished;
+    }
+
     @Override
     public boolean build(String name, File schematic, Vec3i origin) {
         Optional<ISchematicFormat> format = SchematicSystem.INSTANCE.getByFile(schematic);
@@ -307,16 +310,17 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         return true;
     }
 
-    @Override
-    public boolean clearState() {
-        final boolean isEmpty = !stateStack.isEmpty();
-        stateStack.clear();
-        return isEmpty;
+    public void resume() {
+        if (!this.stateStack.isEmpty()) {
+            popStack();
+        }
+
+        this.paused = false;
+        this.active = true;
     }
 
-    @Override
-    public boolean isFromAltoclefFinished() {
-        return this.fromAltoclefFinished;
+    public void pause() {
+        paused = true;
     }
 
     @Override
@@ -351,33 +355,6 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         build("clear area", new FillSchematic(widthX, heightY, lengthZ, Blocks.AIR.defaultBlockState()), origin);
     }
 
-    public void resume() {
-        if (!this.stateStack.isEmpty()) {
-            popStack();
-        }
-
-        this.paused = false;
-        this.active = true;
-    }
-
-    @Override
-    public boolean isFromAltoclef() {
-        return this.fromAltoclef;
-    }
-
-    @Override
-    public void build(String name, ISchematic schematic, Vec3i origin, boolean fromAltoclef) {
-        this.build(name, schematic, origin);
-        this.fromAltoclef = fromAltoclef;
-    }
-
-    @Override
-    public boolean build(String name, File schematic, Vec3i origin, boolean fromAltoclef) {
-        final boolean bl = this.build(name, schematic, origin);
-        this.fromAltoclef = fromAltoclef;
-        return bl;
-    }
-
     @Override
     public void reset() {
         onLostControl();
@@ -393,24 +370,6 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         return new HashMap<>(this.sbtMissing);
         //return (this.fromAltoclef) ? new HashMap<>(this.missing) : null;
     }
-
-    /*private boolean isBlacklistedByAltoclef(final BlockPos pos) {
-        return this.ignoredBlocksInMesh.stream().anyMatch(e -> blockPosMatches(e, pos));
-    }*/
-
-    /*public void decideToIgnoreInSchematic(BetterBlockPos positionToPlace) {
-        if (isActive() && isFromAltoclef()) {
-            // I was too lazy to check which one should be checked
-            if ((this.realSchematic != null && realSchematic.inSchematic(positionToPlace.x, positionToPlace.y, positionToPlace.z, ctx.world().getBlockState(positionToPlace)))
-                    || (this.schematic != null && schematic.inSchematic(positionToPlace.x, positionToPlace.y, positionToPlace.z, ctx.world().getBlockState(positionToPlace)))) {
-                BlockState state = ctx.world().getBlockState(positionToPlace);
-                if (state.getBlock() instanceof AirBlock) {
-                    System.out.println("where banana?");
-                    this.ignoredBlocksInMesh.add(positionToPlace);
-                }
-            }
-        }
-    }*/
 
     @Override
     public List<BlockState> getApproxPlaceable() {
@@ -440,6 +399,24 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
     private boolean blockPosMatches(final BlockPos pos1, final BlockPos pos2) {
         return (pos1.getX() == pos2.getX() && pos1.getY() == pos2.getY() && pos1.getZ() == pos2.getZ());
     }
+
+    /*private boolean isBlacklistedByAltoclef(final BlockPos pos) {
+        return this.ignoredBlocksInMesh.stream().anyMatch(e -> blockPosMatches(e, pos));
+    }*/
+
+    /*public void decideToIgnoreInSchematic(BetterBlockPos positionToPlace) {
+        if (isActive() && isFromAltoclef()) {
+            // I was too lazy to check which one should be checked
+            if ((this.realSchematic != null && realSchematic.inSchematic(positionToPlace.x, positionToPlace.y, positionToPlace.z, ctx.world().getBlockState(positionToPlace)))
+                    || (this.schematic != null && schematic.inSchematic(positionToPlace.x, positionToPlace.y, positionToPlace.z, ctx.world().getBlockState(positionToPlace)))) {
+                BlockState state = ctx.world().getBlockState(positionToPlace);
+                if (state.getBlock() instanceof AirBlock) {
+                    System.out.println("where banana?");
+                    this.ignoredBlocksInMesh.add(positionToPlace);
+                }
+            }
+        }
+    }*/
 
     private Optional<Tuple<BetterBlockPos, Rotation>> toBreakNearPlayer(BuilderCalculationContext bcc) {
         BetterBlockPos center = ctx.playerFeet();
@@ -478,39 +455,9 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         return Optional.empty();
     }
 
-    private OptionalInt hasAnyItemThatWouldPlace(BlockState desired, HitResult result, Rotation rot) {
-        for (int i = 0; i < 9; i++) {
-            ItemStack stack = ctx.player().getInventory().items.get(i);
-            if (stack.isEmpty() || !(stack.getItem() instanceof BlockItem)) {
-                continue;
-            }
-            float originalYaw = ctx.player().getYRot();
-            float originalPitch = ctx.player().getXRot();
-            // the state depends on the facing of the player sometimes
-            ctx.player().setYRot(rot.getYaw());
-            ctx.player().setXRot(rot.getPitch());
-            BlockPlaceContext meme = new BlockPlaceContext(new UseOnContext(
-                    ctx.world(),
-                    ctx.player(),
-                    InteractionHand.MAIN_HAND,
-                    stack,
-                    (BlockHitResult) result
-            ) {
-            }); // that {} gives us access to a protected constructor lmfao
-            BlockState wouldBePlaced = ((BlockItem) stack.getItem()).getBlock().getStateForPlacement(meme);
-            ctx.player().setYRot(originalYaw);
-            ctx.player().setXRot(originalPitch);
-            if (wouldBePlaced == null) {
-                continue;
-            }
-            if (!meme.canPlace()) {
-                continue;
-            }
-            if (valid(wouldBePlaced, desired, true)) {
-                return OptionalInt.of(i);
-            }
-        }
-        return OptionalInt.empty();
+    @Override
+    public boolean isPaused() {
+        return paused;
     }
 
     private Optional<Placement> searchForPlacables(BuilderCalculationContext bcc, List<BlockState> desirableOnHotbar) {
@@ -581,6 +528,59 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
             }
         }
         return Optional.empty();
+    }
+
+    @Override
+    public boolean isFromAltoclef() {
+        return this.fromAltoclef;
+    }
+
+    @Override
+    public void build(String name, ISchematic schematic, Vec3i origin, boolean fromAltoclef) {
+        this.build(name, schematic, origin);
+        this.fromAltoclef = fromAltoclef;
+    }
+
+    @Override
+    public boolean build(String name, File schematic, Vec3i origin, boolean fromAltoclef) {
+        final boolean bl = this.build(name, schematic, origin);
+        this.fromAltoclef = fromAltoclef;
+        return bl;
+    }
+
+    private OptionalInt hasAnyItemThatWouldPlace(BlockState desired, HitResult result, Rotation rot) {
+        for (int i = 0; i < 9; i++) {
+            ItemStack stack = ctx.player().getInventory().items.get(i);
+            if (stack.isEmpty() || !(stack.getItem() instanceof BlockItem)) {
+                continue;
+            }
+            float originalYaw = ctx.player().getYRot();
+            float originalPitch = ctx.player().getXRot();
+            // the state depends on the facing of the player sometimes
+            ctx.player().setYRot(rot.getYaw());
+            ctx.player().setXRot(rot.getPitch());
+            BlockPlaceContext meme = new BlockPlaceContext(new UseOnContext(
+                    ctx.world(),
+                    ctx.player(),
+                    InteractionHand.MAIN_HAND,
+                    stack,
+                    (BlockHitResult) result
+            ) {
+            }); // that {} gives us access to a protected constructor lmfao
+            BlockState wouldBePlaced = ((BlockItem) stack.getItem()).getBlock().getStateForPlacement(meme);
+            ctx.player().setYRot(originalYaw);
+            ctx.player().setXRot(originalPitch);
+            if (wouldBePlaced == null) {
+                continue;
+            }
+            if (!meme.canPlace()) {
+                continue;
+            }
+            if (valid(wouldBePlaced, desired, true)) {
+                return OptionalInt.of(i);
+            }
+        }
+        return OptionalInt.empty();
     }
 
     private BlockPos getFromHistory(final BlockPos pos) {
@@ -932,6 +932,25 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         return assemble(bcc, approxPlaceable, false);
     }
 
+    @Override
+    public String displayName0() {
+        return paused ? "Builder Paused" : "Building " + name;
+    }
+
+    private boolean sameWithoutOrientation(BlockState first, BlockState second) {
+        if (first.getBlock() != second.getBlock()) {
+            return false;
+        }
+        ImmutableMap<Property<?>, Comparable<?>> map1 = first.getValues();
+        ImmutableMap<Property<?>, Comparable<?>> map2 = second.getValues();
+        for (Property<?> prop : map1.keySet()) {
+            if (map1.get(prop) != map2.get(prop) && !orientationProps.contains(prop)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private boolean isDefaultState(final BlockState state) {
         final List<PropertyContainer> propertyContainers = state.getValues().entrySet().stream().map(PROPERTY_ENTRY_TO_STRING_FUNCTION).collect(Collectors.toList());
         for (final PropertyContainer container : propertyContainers) {
@@ -944,6 +963,26 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         }
         return true;
     }
+
+    /*private boolean inInventoryWithUnderDifferentProperties(final BlockState state) {
+        final List<PropertyContainer> propertyContainers = state.getValues().entrySet().stream().map(PROPERTY_ENTRY_TO_STRING_FUNCTION).collect(Collectors.toList());
+        for (final PropertyContainer container : propertyContainers) {
+
+        }
+
+        return false;
+    }*/
+
+    /*private final List<BlockState> asInventoryList(final List<BlockState> placeables) {
+        final List<BlockState> invStates = new ArrayList<>();
+        placeables.forEach(e -> {
+            final BlockState defaultState = e.getBlock().defaultBlockState();
+            invStates.removeIf(a -> a.toString().equals(defaultState.toString()));
+            invStates.add(defaultState);
+        });
+
+        return invStates;
+    }*/
 
     private Goal assemble(BuilderCalculationContext bcc, List<BlockState> approxPlaceable, boolean logMissing) {
         List<BetterBlockPos> placeable = new ArrayList<>();
@@ -1021,56 +1060,19 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         return new GoalComposite(toBreak.toArray(new Goal[0]));
     }
 
-    private Goal placementGoal(BlockPos pos, BuilderCalculationContext bcc) {
-        if (!(ctx.world().getBlockState(pos).getBlock() instanceof AirBlock)) {  // TODO can this even happen?
-            return new GoalPlace(pos);
+    public static class Placement {
+
+        private final int hotbarSelection;
+        private final BlockPos placeAgainst;
+        private final Direction side;
+        private final Rotation rot;
+
+        public Placement(int hotbarSelection, BlockPos placeAgainst, Direction side, Rotation rot) {
+            this.hotbarSelection = hotbarSelection;
+            this.placeAgainst = placeAgainst;
+            this.side = side;
+            this.rot = rot;
         }
-        boolean allowSameLevel = !(ctx.world().getBlockState(pos.above()).getBlock() instanceof AirBlock);
-        BlockState current = ctx.world().getBlockState(pos);
-        for (Direction facing : Movement.HORIZONTALS_BUT_ALSO_DOWN_____SO_EVERY_DIRECTION_EXCEPT_UP) {
-            //noinspection ConstantConditions
-            if (MovementHelper.canPlaceAgainst(ctx, pos.relative(facing)) && placementPlausible(pos, bcc.getSchematic(pos.getX(), pos.getY(), pos.getZ(), current))) {
-                return new GoalAdjacent(pos, pos.relative(facing), allowSameLevel);
-            }
-        }
-        noteInsert(pos);
-        return new GoalPlace(pos);
-    }
-
-    /*private boolean inInventoryWithUnderDifferentProperties(final BlockState state) {
-        final List<PropertyContainer> propertyContainers = state.getValues().entrySet().stream().map(PROPERTY_ENTRY_TO_STRING_FUNCTION).collect(Collectors.toList());
-        for (final PropertyContainer container : propertyContainers) {
-
-        }
-
-        return false;
-    }*/
-
-    /*private final List<BlockState> asInventoryList(final List<BlockState> placeables) {
-        final List<BlockState> invStates = new ArrayList<>();
-        placeables.forEach(e -> {
-            final BlockState defaultState = e.getBlock().defaultBlockState();
-            invStates.removeIf(a -> a.toString().equals(defaultState.toString()));
-            invStates.add(defaultState);
-        });
-
-        return invStates;
-    }*/
-
-    private Goal breakGoal(BlockPos pos, BuilderCalculationContext bcc) {
-        if (Baritone.settings().goalBreakFromAbove.value && bcc.bsi.get0(pos.above()).getBlock() instanceof AirBlock && bcc.bsi.get0(pos.above(2)).getBlock() instanceof AirBlock) {
-            return new JankyGoalComposite(new GoalBreak(pos), new GoalGetToBlock(pos.above()) {
-                @Override
-                public boolean isInGoal(int x, int y, int z) {
-                    if (y > this.y || (x == this.x && y == this.y && z == this.z)) {
-                        return false;
-                    }
-                    return super.isInGoal(x, y, z);
-                }
-            });
-        }
-        //TODO: maybe noteRemoval here?
-        return new GoalBreak(pos);
     }
 
     public static class JankyGoalComposite implements Goal {
@@ -1100,6 +1102,38 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         }
     }
 
+    private Goal placementGoal(BlockPos pos, BuilderCalculationContext bcc) {
+        if (!(ctx.world().getBlockState(pos).getBlock() instanceof AirBlock)) {  // TODO can this even happen?
+            return new GoalPlace(pos);
+        }
+        boolean allowSameLevel = !(ctx.world().getBlockState(pos.above()).getBlock() instanceof AirBlock);
+        BlockState current = ctx.world().getBlockState(pos);
+        for (Direction facing : Movement.HORIZONTALS_BUT_ALSO_DOWN_____SO_EVERY_DIRECTION_EXCEPT_UP) {
+            //noinspection ConstantConditions
+            if (MovementHelper.canPlaceAgainst(ctx, pos.relative(facing)) && placementPlausible(pos, bcc.getSchematic(pos.getX(), pos.getY(), pos.getZ(), current))) {
+                return new GoalAdjacent(pos, pos.relative(facing), allowSameLevel);
+            }
+        }
+        noteInsert(pos);
+        return new GoalPlace(pos);
+    }
+
+    private Goal breakGoal(BlockPos pos, BuilderCalculationContext bcc) {
+        if (Baritone.settings().goalBreakFromAbove.value && bcc.bsi.get0(pos.above()).getBlock() instanceof AirBlock && bcc.bsi.get0(pos.above(2)).getBlock() instanceof AirBlock) {
+            return new JankyGoalComposite(new GoalBreak(pos), new GoalGetToBlock(pos.above()) {
+                @Override
+                public boolean isInGoal(int x, int y, int z) {
+                    if (y > this.y || (x == this.x && y == this.y && z == this.z)) {
+                        return false;
+                    }
+                    return super.isInGoal(x, y, z);
+                }
+            });
+        }
+        //TODO: maybe noteRemoval here?
+        return new GoalBreak(pos);
+    }
+
     public static class GoalBreak extends GoalGetToBlock {
 
         public GoalBreak(BlockPos pos) {
@@ -1115,56 +1149,6 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
             // but any other adjacent works for breaking, including inside or below
             return super.isInGoal(x, y, z);
         }
-    }
-
-    @Override
-    public void onLostControl() {
-        if (this.fromAltoclef && this.stateStack.isEmpty()) {
-            pushState();
-        }
-
-        incorrectPositions = null;
-        name = null;
-        schematic = null;
-        realSchematic = null;
-        layer = Baritone.settings().startAtLayer.value;
-        numRepeats = 0;
-        paused = false;
-        observedCompleted = null;
-        origin = null;
-        missing = null;
-        schemSize = null;
-        fromAltoclef = false;
-        active = false;
-        blockBreakHistory.clear();
-    }
-
-    private List<BlockState> approxPlaceable(int size) {
-        List<BlockState> result = new ArrayList<>();
-        for (int i = 0; i < size; i++) {
-            ItemStack stack = ctx.player().getInventory().items.get(i);
-            //if (stack.getItem().toString() != "air") System.out.println("BARIT1: " + stack.getItem().toString());
-            if (stack.isEmpty() || !(stack.getItem() instanceof BlockItem)) {
-                result.add(Blocks.AIR.defaultBlockState());
-                continue;
-            }
-            //if (stack.getItem().toString() != "air") System.out.println("BARIT2: " + stack.getItem().toString());
-            /*final Vec3 playerPos = new Vec3(ctx.player().position().x, ctx.player().position().y, ctx.player().position().z);
-            final BlockHitResult playerFeetHitResult = new BlockHitResult(playerPos, Direction.UP, ctx.playerFeet(), false);
-            final UseOnContext usageMainHandAction = new UseOnContext(ctx.world(), ctx.player(), InteractionHand.MAIN_HAND, stack, playerFeetHitResult) {};
-            final BlockPlaceContext blockPlacementContext = new BlockPlaceContext(usageMainHandAction);
-            final Block targetBlock = ((BlockItem) stack.getItem()).getBlock();
-            final BlockState targetState = targetBlock.getStateForPlacement(blockPlacementContext);*/
-
-            final Block targetBlock = ((BlockItem) stack.getItem()).getBlock();
-            final BlockState targetState = targetBlock.getStateDefinition().getPossibleStates().get(0);
-
-
-            //if (stack.getItem().toString() != "air") System.out.println("BARIT3: " + targetState);
-            result.add(targetState);
-            //result.add(((BlockItem) stack.getItem()).getBlock().getStateForPlacement(new BlockPlaceContext(new UseOnContext(ctx.world(), ctx.player(), InteractionHand.MAIN_HAND, stack, new BlockHitResult(new Vec3(ctx.player().position().x, ctx.player().position().y, ctx.player().position().z), Direction.UP, ctx.playerFeet(), false)) {})));
-        }
-        return result;
     }
 
     public static class GoalAdjacent extends GoalGetToBlock {
@@ -1197,6 +1181,91 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
         public double heuristic(int x, int y, int z) {
             // prioritize lower y coordinates
             return this.y * 100 + super.heuristic(x, y, z);
+        }
+    }
+
+    @Override
+    public void onLostControl() {
+        if (this.fromAltoclef && this.stateStack.isEmpty()) {
+            pushState();
+        }
+
+        incorrectPositions = null;
+        name = null;
+        schematic = null;
+        realSchematic = null;
+        layer = Baritone.settings().startAtLayer.value;
+        numRepeats = 0;
+        paused = false;
+        observedCompleted = null;
+        origin = null;
+        missing = null;
+        schemSize = null;
+        fromAltoclef = false;
+        active = false;
+        blockBreakHistory.clear();
+    }
+
+    public static class GoalPlace extends GoalBlock {
+
+        public GoalPlace(BlockPos placeAt) {
+            super(placeAt.above());
+        }
+
+        public double heuristic(int x, int y, int z) {
+            // prioritize lower y coordinates
+            return this.y * 100 + super.heuristic(x, y, z);
+        }
+    }
+
+    private List<BlockState> approxPlaceable(int size) {
+        List<BlockState> result = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            ItemStack stack = ctx.player().getInventory().items.get(i);
+            //if (stack.getItem().toString() != "air") System.out.println("BARIT1: " + stack.getItem().toString());
+            if (stack.isEmpty() || !(stack.getItem() instanceof BlockItem)) {
+                result.add(Blocks.AIR.defaultBlockState());
+                continue;
+            }
+            //if (stack.getItem().toString() != "air") System.out.println("BARIT2: " + stack.getItem().toString());
+            /*final Vec3 playerPos = new Vec3(ctx.player().position().x, ctx.player().position().y, ctx.player().position().z);
+            final BlockHitResult playerFeetHitResult = new BlockHitResult(playerPos, Direction.UP, ctx.playerFeet(), false);
+            final UseOnContext usageMainHandAction = new UseOnContext(ctx.world(), ctx.player(), InteractionHand.MAIN_HAND, stack, playerFeetHitResult) {};
+            final BlockPlaceContext blockPlacementContext = new BlockPlaceContext(usageMainHandAction);
+            final Block targetBlock = ((BlockItem) stack.getItem()).getBlock();
+            final BlockState targetState = targetBlock.getStateForPlacement(blockPlacementContext);*/
+
+            final Block targetBlock = ((BlockItem) stack.getItem()).getBlock();
+            final BlockState targetState = targetBlock.getStateDefinition().getPossibleStates().get(0);
+
+
+            //if (stack.getItem().toString() != "air") System.out.println("BARIT3: " + targetState);
+            result.add(targetState);
+            //result.add(((BlockItem) stack.getItem()).getBlock().getStateForPlacement(new BlockPlaceContext(new UseOnContext(ctx.world(), ctx.player(), InteractionHand.MAIN_HAND, stack, new BlockHitResult(new Vec3(ctx.player().position().x, ctx.player().position().y, ctx.player().position().z), Direction.UP, ctx.playerFeet(), false)) {})));
+        }
+        return result;
+    }
+
+    private final class HistoryInfo {
+        public long counter = 0;
+        public boolean brokenPreviously = false;
+    }
+
+    private final class PropertyContainer {
+        private final String propertyKey;
+        private final String propertyValue;
+
+        public PropertyContainer(final String propertyKey, final String propertyValue) {
+            this.propertyKey = propertyKey;
+            this.propertyValue = propertyValue;
+        }
+
+        public String getPropertyKey() {
+            return this.propertyKey;
+        }
+
+        public String getPropertyValue() {
+            return this.propertyValue;
         }
     }
 
@@ -1243,76 +1312,6 @@ public final class BuilderProcess extends BaritoneProcessHelper implements IBuil
             return true;
         }
         return Baritone.settings().buildIgnoreDirection.value && sameWithoutOrientation(current, desired);
-    }
-
-    public static class Placement {
-
-        private final int hotbarSelection;
-        private final BlockPos placeAgainst;
-        private final Direction side;
-        private final Rotation rot;
-
-        public Placement(int hotbarSelection, BlockPos placeAgainst, Direction side, Rotation rot) {
-            this.hotbarSelection = hotbarSelection;
-            this.placeAgainst = placeAgainst;
-            this.side = side;
-            this.rot = rot;
-        }
-    }
-
-
-    @Override
-    public String displayName0() {
-        return paused ? "Builder Paused" : "Building " + name;
-    }
-
-    public static class GoalPlace extends GoalBlock {
-
-        public GoalPlace(BlockPos placeAt) {
-            super(placeAt.above());
-        }
-
-        public double heuristic(int x, int y, int z) {
-            // prioritize lower y coordinates
-            return this.y * 100 + super.heuristic(x, y, z);
-        }
-    }
-
-    private boolean sameWithoutOrientation(BlockState first, BlockState second) {
-        if (first.getBlock() != second.getBlock()) {
-            return false;
-        }
-        ImmutableMap<Property<?>, Comparable<?>> map1 = first.getValues();
-        ImmutableMap<Property<?>, Comparable<?>> map2 = second.getValues();
-        for (Property<?> prop : map1.keySet()) {
-            if (map1.get(prop) != map2.get(prop) && !orientationProps.contains(prop)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private final class HistoryInfo {
-        public long counter = 0;
-        public boolean brokenPreviously = false;
-    }
-
-    private final class PropertyContainer {
-        private final String propertyKey;
-        private final String propertyValue;
-
-        public PropertyContainer(final String propertyKey, final String propertyValue) {
-            this.propertyKey = propertyKey;
-            this.propertyValue = propertyValue;
-        }
-
-        public String getPropertyKey() {
-            return this.propertyKey;
-        }
-
-        public String getPropertyValue() {
-            return this.propertyValue;
-        }
     }
 
     public class BuilderCalculationContext extends CalculationContext {

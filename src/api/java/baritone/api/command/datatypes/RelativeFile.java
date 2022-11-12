@@ -35,6 +35,26 @@ import static baritone.api.utils.Helper.HELPER;
 public enum RelativeFile implements IDatatypePost<File, File> {
     INSTANCE;
 
+    @Override
+    public File apply(IDatatypeContext ctx, File original) throws CommandException {
+        if (original == null) {
+            original = new File("./");
+        }
+
+        Path path;
+        try {
+            path = FileSystems.getDefault().getPath(ctx.getConsumer().getString());
+        } catch (InvalidPathException e) {
+            throw new IllegalArgumentException("invalid path");
+        }
+        return getCanonicalFileUnchecked(original.toPath().resolve(path).toFile());
+    }
+
+    @Override
+    public Stream<String> tabComplete(IDatatypeContext ctx) {
+        return Stream.empty();
+    }
+
     /**
      * Seriously
      *
@@ -79,25 +99,5 @@ public enum RelativeFile implements IDatatypePost<File, File> {
             return gameDir.getParentFile();
         }
         return gameDir;
-    }
-
-    @Override
-    public File apply(IDatatypeContext ctx, File original) throws CommandException {
-        if (original == null) {
-            original = new File("./");
-        }
-
-        Path path;
-        try {
-            path = FileSystems.getDefault().getPath(ctx.getConsumer().getString());
-        } catch (InvalidPathException e) {
-            throw new IllegalArgumentException("invalid path");
-        }
-        return getCanonicalFileUnchecked(original.toPath().resolve(path).toFile());
-    }
-
-    @Override
-    public Stream<String> tabComplete(IDatatypeContext ctx) {
-        return Stream.empty();
     }
 }

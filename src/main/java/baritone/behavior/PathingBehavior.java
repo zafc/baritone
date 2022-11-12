@@ -46,40 +46,36 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public final class PathingBehavior extends Behavior implements IPathingBehavior, Helper {
 
-    private final Object pathCalcLock = new Object();
-    private final Object pathPlanLock = new Object();
-    private final LinkedBlockingQueue<PathEvent> toDispatch = new LinkedBlockingQueue<>();
     private PathExecutor current;
     private PathExecutor next;
+
     private Goal goal;
     private CalculationContext context;
+
     /*eta*/
     private int ticksElapsedSoFar;
     private BetterBlockPos startPosition;
+
     private boolean safeToCancel;
     private boolean pauseRequestedLastTick;
     private boolean unpausedLastTick;
     private boolean pausedThisTick;
     private boolean cancelRequested;
     private boolean calcFailedLastTick;
+
     private volatile AbstractNodeCostSearch inProgress;
+    private final Object pathCalcLock = new Object();
+
+    private final Object pathPlanLock = new Object();
+
     private boolean lastAutoJump;
+
     private BetterBlockPos expectedSegmentStart;
+
+    private final LinkedBlockingQueue<PathEvent> toDispatch = new LinkedBlockingQueue<>();
 
     public PathingBehavior(Baritone baritone) {
         super(baritone);
-    }
-
-    private static AbstractNodeCostSearch createPathfinder(BlockPos start, Goal goal, IPath previous, CalculationContext context) {
-        Goal transformed = goal;
-        if (Baritone.settings().simplifyUnloadedYCoord.value && goal instanceof IGoalRenderPos) {
-            BlockPos pos = ((IGoalRenderPos) goal).getGoalPos();
-            if (!context.bsi.worldContainsLoadedChunk(pos.getX(), pos.getZ())) {
-                transformed = new GoalXZ(pos.getX(), pos.getZ());
-            }
-        }
-        Favoring favoring = new Favoring(context.getBaritone().getPlayerContext(), previous, context);
-        return new AStarPathFinder(start.getX(), start.getY(), start.getZ(), transformed, favoring, context);
     }
 
     private void queuePathEvent(PathEvent event) {
@@ -551,6 +547,18 @@ public final class PathingBehavior extends Behavior implements IPathingBehavior,
                 }
             }
         });
+    }
+
+    private static AbstractNodeCostSearch createPathfinder(BlockPos start, Goal goal, IPath previous, CalculationContext context) {
+        Goal transformed = goal;
+        if (Baritone.settings().simplifyUnloadedYCoord.value && goal instanceof IGoalRenderPos) {
+            BlockPos pos = ((IGoalRenderPos) goal).getGoalPos();
+            if (!context.bsi.worldContainsLoadedChunk(pos.getX(), pos.getZ())) {
+                transformed = new GoalXZ(pos.getX(), pos.getZ());
+            }
+        }
+        Favoring favoring = new Favoring(context.getBaritone().getPlayerContext(), previous, context);
+        return new AStarPathFinder(start.getX(), start.getY(), start.getZ(), transformed, favoring, context);
     }
 
     @Override

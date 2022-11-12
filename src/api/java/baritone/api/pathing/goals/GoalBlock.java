@@ -53,18 +53,6 @@ public class GoalBlock implements Goal, IGoalRenderPos {
         this.z = z;
     }
 
-    public static double calculate(double xDiff, int yDiff, double zDiff) {
-        double heuristic = 0;
-
-        // if yDiff is 1 that means that currentY-goalY==1 which means that we're 1 block above where we should be
-        // therefore going from 0,yDiff,0 to a GoalYLevel of 0 is accurate
-        heuristic += GoalYLevel.calculate(0, yDiff);
-
-        //use the pythagorean and manhattan mixture from GoalXZ
-        heuristic += GoalXZ.calculate(xDiff, zDiff);
-        return heuristic;
-    }
-
     @Override
     public boolean isInGoal(int x, int y, int z) {
         return x == this.x && y == this.y && z == this.z;
@@ -94,5 +82,17 @@ public class GoalBlock implements Goal, IGoalRenderPos {
     @Override
     public BlockPos getGoalPos() {
         return new BlockPos(x, y, z);
+    }
+
+    public static double calculate(double xDiff, int yDiff, double zDiff) {
+        double heuristic = 0;
+
+        // if yDiff is 1 that means that currentY-goalY==1 which means that we're 1 block above where we should be
+        // therefore going from 0,yDiff,0 to a GoalYLevel of 0 is accurate
+        heuristic += GoalYLevel.calculate(0, yDiff);
+
+        //use the pythagorean and manhattan mixture from GoalXZ
+        heuristic += GoalXZ.calculate(xDiff, zDiff);
+        return heuristic;
     }
 }

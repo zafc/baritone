@@ -1,5 +1,4 @@
 # Pathing features
-
 - **Long distance pathing and splicing** Baritone calculates paths in segments, and precalculates the next segment when
   the current one is about to end, so that it's moving towards the goal at all times.
 - **Chunk caching** Baritone simplifies chunks to a compacted internal 2-bit representation (AIR, SOLID, WATER, AVOID)
@@ -94,7 +93,6 @@ Things it doesn't have yet
 See <a href="https://github.com/cabaletta/baritone/issues">issues</a> for more.
 
 Things it may not ever have, from most likely to least likely =(
-
 - Boats
 - Horses (2x3 path instead of 1x2)
 - Elytra

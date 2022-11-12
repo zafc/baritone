@@ -310,12 +310,6 @@ public class SettingsUtil {
             this.toString = x -> toString.apply((T) x);
         }
 
-        public static Parser getParser(Type type) {
-            return Stream.of(values())
-                    .filter(parser -> parser.accepts(type))
-                    .findFirst().orElse(null);
-        }
-
         @Override
         public Object parse(ParserContext context, String raw) {
             Object parsed = this.parser.apply(raw);
@@ -331,6 +325,12 @@ public class SettingsUtil {
         @Override
         public boolean accepts(Type type) {
             return type instanceof Class && this.cla$$.isAssignableFrom((Class) type);
+        }
+
+        public static Parser getParser(Type type) {
+            return Stream.of(values())
+                    .filter(parser -> parser.accepts(type))
+                    .findFirst().orElse(null);
         }
     }
 

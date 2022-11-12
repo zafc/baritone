@@ -53,20 +53,6 @@ public final class ExploreProcess extends BaritoneProcessHelper implements IExpl
         super(baritone);
     }
 
-    private static Goal createGoal(int x, int z) {
-        if (Baritone.settings().exploreMaintainY.value == -1) {
-            return new GoalXZ(x, z);
-        }
-        // don't use a goalblock because we still want isInGoal to return true if X and Z are correct
-        // we just want to try and maintain Y on the way there, not necessarily end at that specific Y
-        return new GoalXZ(x, z) {
-            @Override
-            public double heuristic(int x, int y, int z) {
-                return super.heuristic(x, y, z) + GoalYLevel.calculate(Baritone.settings().exploreMaintainY.value, y);
-            }
-        };
-    }
-
     @Override
     public boolean isActive() {
         return explorationOrigin != null;
@@ -174,14 +160,18 @@ public final class ExploreProcess extends BaritoneProcessHelper implements IExpl
         }
     }
 
-    @Override
-    public void onLostControl() {
-        explorationOrigin = null;
-    }
-
-    @Override
-    public String displayName0() {
-        return "Exploring around " + explorationOrigin + ", distance completed " + distanceCompleted + ", currently going to " + new GoalComposite(closestUncachedChunks(explorationOrigin, calcFilter()));
+    private static Goal createGoal(int x, int z) {
+        if (Baritone.settings().exploreMaintainY.value == -1) {
+            return new GoalXZ(x, z);
+        }
+        // don't use a goalblock because we still want isInGoal to return true if X and Z are correct
+        // we just want to try and maintain Y on the way there, not necessarily end at that specific Y
+        return new GoalXZ(x, z) {
+            @Override
+            public double heuristic(int x, int y, int z) {
+                return super.heuristic(x, y, z) + GoalYLevel.calculate(Baritone.settings().exploreMaintainY.value, y);
+            }
+        };
     }
 
     private enum Status {
@@ -296,5 +286,15 @@ public final class ExploreProcess extends BaritoneProcessHelper implements IExpl
         public int countRemain() {
             return Math.min(a.countRemain(), b.countRemain());
         }
+    }
+
+    @Override
+    public void onLostControl() {
+        explorationOrigin = null;
+    }
+
+    @Override
+    public String displayName0() {
+        return "Exploring around " + explorationOrigin + ", distance completed " + distanceCompleted + ", currently going to " + new GoalComposite(closestUncachedChunks(explorationOrigin, calcFilter()));
     }
 }

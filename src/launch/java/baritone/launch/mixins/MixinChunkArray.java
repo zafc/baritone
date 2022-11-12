@@ -34,15 +34,16 @@ public abstract class MixinChunkArray implements IChunkArray {
     @Final
     @Shadow
     int chunkRadius;
+
+    @Final
+    @Shadow
+    private int viewRange;
     @Shadow
     int viewCenterX;
     @Shadow
     int viewCenterZ;
     @Shadow
     int chunkCount;
-    @Final
-    @Shadow
-    private int viewRange;
 
     @Shadow
     abstract boolean inRange(int x, int z);

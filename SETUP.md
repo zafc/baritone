@@ -49,7 +49,6 @@ want `baritone-standalone-forge-VERSION.jar`
 - **Forge/Fabric Unoptimized**: Same as Unoptimized, but packaged for Forge/Fabric.
 
 ## Build it yourself
-
 - Clone or download Baritone
 
   ![Image](https://i.imgur.com/kbqBtoN.png)
@@ -69,7 +68,6 @@ If you are using anything above OpenJDK 8 for 1.12.2-1.16.5, it might not work b
 8 using may not have the needed javax classes.
 
 Open JDK download: https://openjdk.java.net/install/
-
 #### macOS guide
 
 In order to get JDK 8, Try running the following command:
@@ -123,7 +121,6 @@ $ gradlew runClient
 For information on how to build baritone, see [Building Baritone](#building-baritone)
 
 ## IntelliJ
-
 - Open the project in IntelliJ as a Gradle project
 
   ![Image](https://i.imgur.com/jw7Q6vY.png)

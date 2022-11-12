@@ -7,7 +7,6 @@ assignees: ''
 ---
 
 ## Some information
-
 Operating system:
 Java version:
 Minecraft version:
@@ -15,7 +14,6 @@ Baritone version:
 Other mods (if used):
 
 ## Exception, error or logs
-
 Please find your `latest.log` or `debug.log` in this folder and attach it to the issue
 
 Linux: `~/.minecraft/logs/`
@@ -25,11 +23,9 @@ Windows: `%appdata%/.minecraft/logs/`
 Mac: `/Library/Application\ Support/minecraft/logs/`
 
 ## How to reproduce
-
 Add your steps to reproduce the issue/bug experienced here.
 
 ## Modified settings
-
 To get the modified settings run `#modified` in game
 
 ## Final checklist

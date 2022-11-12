@@ -45,6 +45,16 @@ public class MovementPillar extends Movement {
         super(baritone, start, end, new BetterBlockPos[]{start.above(2)}, start);
     }
 
+    @Override
+    public double calculateCost(CalculationContext context) {
+        return cost(context, src.x, src.y, src.z);
+    }
+
+    @Override
+    protected Set<BetterBlockPos> calculateValidPositions() {
+        return ImmutableSet.of(src, dest);
+    }
+
     public static double cost(CalculationContext context, int x, int y, int z) {
         BlockState fromState = context.get(x, y, z);
         Block from = fromState.getBlock();
@@ -145,16 +155,6 @@ public class MovementPillar extends Movement {
             return vine.west();
         }
         return null;
-    }
-
-    @Override
-    public double calculateCost(CalculationContext context) {
-        return cost(context, src.x, src.y, src.z);
-    }
-
-    @Override
-    protected Set<BetterBlockPos> calculateValidPositions() {
-        return ImmutableSet.of(src, dest);
     }
 
     @Override

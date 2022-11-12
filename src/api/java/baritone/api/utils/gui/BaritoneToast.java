@@ -37,20 +37,6 @@ public class BaritoneToast implements Toast {
         this.totalShowTime = totalShowTime;
     }
 
-    public static void addOrUpdate(ToastComponent toast, Component title, Component subtitle, long totalShowTime) {
-        BaritoneToast baritonetoast = toast.getToast(BaritoneToast.class, new Object());
-
-        if (baritonetoast == null) {
-            toast.addToast(new BaritoneToast(title, subtitle, totalShowTime));
-        } else {
-            baritonetoast.setDisplayedText(title, subtitle);
-        }
-    }
-
-    public static void addOrUpdate(Component title, Component subtitle) {
-        addOrUpdate(Minecraft.getInstance().getToasts(), title, subtitle, baritone.api.BaritoneAPI.getSettings().toastTimer.value);
-    }
-
     public Visibility render(PoseStack matrixStack, ToastComponent toastGui, long delta) {
         if (this.newDisplay) {
             this.firstDrawTime = delta;
@@ -77,5 +63,19 @@ public class BaritoneToast implements Toast {
         this.title = titleComponent.getString();
         this.subtitle = subtitleComponent == null ? null : subtitleComponent.getString();
         this.newDisplay = true;
+    }
+
+    public static void addOrUpdate(ToastComponent toast, Component title, Component subtitle, long totalShowTime) {
+        BaritoneToast baritonetoast = toast.getToast(BaritoneToast.class, new Object());
+
+        if (baritonetoast == null) {
+            toast.addToast(new BaritoneToast(title, subtitle, totalShowTime));
+        } else {
+            baritonetoast.setDisplayedText(title, subtitle);
+        }
+    }
+
+    public static void addOrUpdate(Component title, Component subtitle) {
+        addOrUpdate(Minecraft.getInstance().getToasts(), title, subtitle, baritone.api.BaritoneAPI.getSettings().toastTimer.value);
     }
 }

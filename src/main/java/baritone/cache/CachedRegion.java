@@ -75,10 +75,6 @@ public final class CachedRegion implements ICachedRegion {
         this.dimension = dimension;
     }
 
-    private static Path getRegionFile(Path cacheDir, int regionX, int regionZ) {
-        return Paths.get(cacheDir.toString(), "r." + regionX + "." + regionZ + ".bcr");
-    }
-
     @Override
     public final BlockState getBlock(int x, int y, int z) {
         int adjY = y - dimension.minY();
@@ -114,6 +110,7 @@ public final class CachedRegion implements ICachedRegion {
         this.chunks[chunkX][chunkZ] = chunk;
         hasUnsavedChanges = true;
     }
+
 
     public synchronized final void save(String directory) {
         if (!hasUnsavedChanges) {
@@ -356,5 +353,9 @@ public final class CachedRegion implements ICachedRegion {
     @Override
     public final int getZ() {
         return this.z;
+    }
+
+    private static Path getRegionFile(Path cacheDir, int regionX, int regionZ) {
+        return Paths.get(cacheDir.toString(), "r." + regionX + "." + regionZ + ".bcr");
     }
 }

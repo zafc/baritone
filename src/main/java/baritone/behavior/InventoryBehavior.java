@@ -20,7 +20,6 @@ package baritone.behavior;
 import baritone.Baritone;
 import baritone.altoclef.AltoClefSettings;
 import baritone.api.event.events.TickEvent;
-import baritone.api.utils.input.Input;
 import baritone.utils.ToolSet;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Direction;
@@ -59,15 +58,12 @@ public final class InventoryBehavior extends Behavior {
             // we have a crafting table or a chest or something open
             return;
         }
-        // Only perform the inventory swap if we're pathing/mining. Otherwise, this will run every frame.
-        if (baritone.getPathingBehavior().isPathing() || baritone.getInputOverrideHandler().isInputForcedDown(Input.CLICK_LEFT)) {
-            if (firstValidThrowaway() >= 9) { // aka there are none on the hotbar, but there are some in main inventory
-                swapWithHotBar(firstValidThrowaway(), 8);
-            }
-            int pick = bestToolAgainst(Blocks.STONE, PickaxeItem.class);
-            if (pick >= 9) {
-                swapWithHotBar(pick, 0);
-            }
+        if (firstValidThrowaway() >= 9) { // aka there are none on the hotbar, but there are some in main inventory
+            swapWithHotBar(firstValidThrowaway(), 8);
+        }
+        int pick = bestToolAgainst(Blocks.STONE, PickaxeItem.class);
+        if (pick >= 9) {
+            swapWithHotBar(pick, 0);
         }
     }
 
@@ -109,12 +105,11 @@ public final class InventoryBehavior extends Behavior {
         NonNullList<ItemStack> invy = ctx.player().getInventory().items;
         for (int i = 0; i < invy.size(); i++) {
             Item item = invy.get(i).getItem();
-            if (Baritone.settings().acceptableThrowawayItems.value.contains(item)) {
+            if (Baritone.settings().acceptableThrowawayItems.value.contains(invy.get(i).getItem())) {
                 if (!AltoClefSettings.getInstance().isItemProtected(item)) {
                     return i;
                 }
             }
-
         }
         return -1;
     }
@@ -155,7 +150,6 @@ public final class InventoryBehavior extends Behavior {
     public boolean selectThrowawayForLocation(boolean select, int x, int y, int z) {
         if (AltoClefSettings.getInstance().isInteractionPaused()) return false;
         if (AltoClefSettings.getInstance().shouldAvoidPlacingAt(x, y, z)) return false;
-
         BlockState maybe = baritone.getBuilderProcess().placeAt(x, y, z, baritone.bsi.get0(x, y, z));
         if (maybe != null && throwaway(select, stack -> stack.getItem() instanceof BlockItem && maybe.equals(((BlockItem) stack.getItem()).getBlock().getStateForPlacement(new BlockPlaceContext(new UseOnContext(ctx.world(), ctx.player(), InteractionHand.MAIN_HAND, stack, new BlockHitResult(new Vec3(ctx.player().position().x, ctx.player().position().y, ctx.player().position().z), Direction.UP, ctx.playerFeet(), false)) {
         }))))) {

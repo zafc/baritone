@@ -51,14 +51,14 @@ import java.util.regex.Pattern;
 
 public final class BlockOptionalMeta {
 
+    private final Block block;
+    private final Set<BlockState> blockstates;
+    private final ImmutableSet<Integer> stateHashes;
+    private final ImmutableSet<Integer> stackHashes;
     private static final Pattern pattern = Pattern.compile("^(.+?)(?::(\\d+))?$");
     private static LootTables manager;
     private static PredicateManager predicate = new PredicateManager();
     private static Map<Block, List<Item>> drops = new HashMap<>();
-    private final Block block;
-    private final ImmutableSet<Integer> stateHashes;
-    private final ImmutableSet<Integer> stackHashes;
-    private final Set<BlockState> blockstates;
 
     public BlockOptionalMeta(@Nonnull Block block) {
         this.block = block;
@@ -107,6 +107,41 @@ public final class BlockOptionalMeta {
         );
     }
 
+    public Block getBlock() {
+        return block;
+    }
+
+    public boolean matches(@Nonnull Block block) {
+        return block == this.block;
+    }
+
+    public boolean matches(@Nonnull BlockState blockstate) {
+        Block block = blockstate.getBlock();
+        return block == this.block && stateHashes.contains(blockstate.hashCode());
+    }
+
+    public boolean matches(ItemStack stack) {
+        //noinspection ConstantConditions
+        int hash = ((IItemStack) (Object) stack).getBaritoneHash();
+
+        hash -= stack.getDamageValue();
+
+        return stackHashes.contains(hash);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("BlockOptionalMeta{block=%s}", block);
+    }
+
+    public BlockState getAnyBlockState() {
+        if (blockstates.size() > 0) {
+            return blockstates.iterator().next();
+        }
+
+        return null;
+    }
+
     public static LootTables getManager() {
         if (manager == null) {
             PackRepository rpl = new PackRepository(PackType.SERVER_DATA, new ServerPacksSource());
@@ -150,40 +185,5 @@ public final class BlockOptionalMeta {
                 return items;
             }
         });
-    }
-
-    public Block getBlock() {
-        return block;
-    }
-
-    public boolean matches(@Nonnull Block block) {
-        return block == this.block;
-    }
-
-    public boolean matches(@Nonnull BlockState blockstate) {
-        Block block = blockstate.getBlock();
-        return block == this.block && stateHashes.contains(blockstate.hashCode());
-    }
-
-    public boolean matches(ItemStack stack) {
-        //noinspection ConstantConditions
-        int hash = ((IItemStack) (Object) stack).getBaritoneHash();
-
-        hash -= stack.getDamageValue();
-
-        return stackHashes.contains(hash);
-    }
-
-    @Override
-    public String toString() {
-        return String.format("BlockOptionalMeta{block=%s}", block);
-    }
-
-    public BlockState getAnyBlockState() {
-        if (blockstates.size() > 0) {
-            return blockstates.iterator().next();
-        }
-
-        return null;
     }
 }

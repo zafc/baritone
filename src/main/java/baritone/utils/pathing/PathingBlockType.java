@@ -37,11 +37,11 @@ public enum PathingBlockType {
         };
     }
 
-    public static PathingBlockType fromBits(boolean b1, boolean b2) {
-        return b1 ? b2 ? SOLID : AVOID : b2 ? WATER : AIR;
-    }
-
     public final boolean[] getBits() {
         return this.bits;
+    }
+
+    public static PathingBlockType fromBits(boolean b1, boolean b2) {
+        return b1 ? b2 ? SOLID : AVOID : b2 ? WATER : AIR;
     }
 }

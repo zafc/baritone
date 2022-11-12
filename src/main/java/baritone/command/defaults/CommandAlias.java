@@ -27,8 +27,8 @@ import java.util.stream.Stream;
 
 public class CommandAlias extends Command {
 
-    public final String target;
     private final String shortDesc;
+    public final String target;
 
     public CommandAlias(IBaritone baritone, List<String> names, String shortDesc, String target) {
         super(baritone, names.toArray(new String[0]));

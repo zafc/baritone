@@ -49,25 +49,30 @@ public final class CachedWorld implements ICachedWorld, Helper {
      * The maximum number of regions in any direction from (0,0)
      */
     private static final int REGION_MAX = 30_000_000 / 512 + 1;
+
+    /**
+     * A map of all of the cached regions.
+     */
+    private Long2ObjectMap<CachedRegion> cachedRegions = new Long2ObjectOpenHashMap<>();
+
     /**
      * The directory that the cached region files are saved to
      */
     private final String directory;
+
     /**
      * Queue of positions to pack. Refers to the toPackMap, in that every element of this queue will be a
      * key in that map.
      */
     private final LinkedBlockingQueue<ChunkPos> toPackQueue = new LinkedBlockingQueue<>();
+
     /**
      * All chunk positions pending packing. This map will be updated in-place if a new update to the chunk occurs
      * while waiting in the queue for the packer thread to get to it.
      */
     private final Map<ChunkPos, LevelChunk> toPackMap = new ConcurrentHashMap<>();
+
     private final DimensionType dimension;
-    /**
-     * A map of all of the cached regions.
-     */
-    private Long2ObjectMap<CachedRegion> cachedRegions = new Long2ObjectOpenHashMap<>();
 
     CachedWorld(Path directory, DimensionType dimension) {
         if (!Files.exists(directory)) {

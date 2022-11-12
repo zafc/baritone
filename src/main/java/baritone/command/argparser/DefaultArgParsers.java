@@ -26,14 +26,6 @@ import java.util.Locale;
 
 public class DefaultArgParsers {
 
-    public static final List<IArgParser<?>> ALL = Arrays.asList(
-            IntArgumentParser.INSTANCE,
-            LongArgumentParser.INSTANCE,
-            FloatArgumentParser.INSTANCE,
-            DoubleArgumentParser.INSTANCE,
-            BooleanArgumentParser.INSTANCE
-    );
-
     public enum IntArgumentParser implements IArgParser.Stateless<Integer> {
         INSTANCE;
 
@@ -121,4 +113,12 @@ public class DefaultArgParsers {
             }
         }
     }
+
+    public static final List<IArgParser<?>> ALL = Arrays.asList(
+            IntArgumentParser.INSTANCE,
+            LongArgumentParser.INSTANCE,
+            FloatArgumentParser.INSTANCE,
+            DoubleArgumentParser.INSTANCE,
+            BooleanArgumentParser.INSTANCE
+    );
 }

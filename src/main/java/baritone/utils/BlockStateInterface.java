@@ -43,15 +43,16 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 public class BlockStateInterface {
 
     private static final BlockState AIR = Blocks.AIR.defaultBlockState();
-    public final BlockGetter access;
     public final BlockPos.MutableBlockPos isPassableBlockPos;
-    public final BetterWorldBorder worldBorder;
     protected final Level world;
-    private final WorldData worldData;
     private final ClientChunkCache provider;
+    public final BlockGetter access;
+    public final BetterWorldBorder worldBorder;
+    private final WorldData worldData;
+    private LevelChunk prev = null;
+
     private final boolean useTheRealWorld;
     private CachedRegion prevCached = null;
-    private LevelChunk prev = null;
 
     public BlockStateInterface(IPlayerContext ctx) {
         this(ctx, false);
@@ -78,12 +79,6 @@ public class BlockStateInterface {
         this.access = new BlockStateInterfaceAccessWrapper(this);
     }
 
-    public static BlockState get(IPlayerContext ctx, BlockPos pos) {
-        return new BlockStateInterface(ctx).get0(pos.getX(), pos.getY(), pos.getZ()); // immense iq
-        // can't just do world().get because that doesn't work for out of bounds
-        // and toBreak and stuff fails when the movement is instantiated out of load range but it's not able to BlockStateInterface.get what it's going to walk on
-    }
-
     public static Block getBlock(IPlayerContext ctx, BlockPos pos) { // won't be called from the pathing thread because the pathing thread doesn't make a single blockpos pog
         return get(ctx, pos).getBlock();
     }
@@ -97,8 +92,10 @@ public class BlockStateInterface {
         return section.getBlockState(x & 15, y & 15, z & 15);
     }
 
-    public boolean worldContainsLoadedChunk(int blockX, int blockZ) {
-        return provider.hasChunk(blockX >> 4, blockZ >> 4);
+    public static BlockState get(IPlayerContext ctx, BlockPos pos) {
+        return new BlockStateInterface(ctx).get0(pos.getX(), pos.getY(), pos.getZ()); // immense iq
+        // can't just do world().get because that doesn't work for out of bounds
+        // and toBreak and stuff fails when the movement is instantiated out of load range but it's not able to BlockStateInterface.get what it's going to walk on
     }
 
     public BlockState get0(BlockPos pos) {
@@ -173,5 +170,9 @@ public class BlockStateInterface {
         }
         prevCached = prevRegion;
         return prevRegion.isCached(x & 511, z & 511);
+    }
+
+    public boolean worldContainsLoadedChunk(int blockX, int blockZ) {
+        return provider.hasChunk(blockX >> 4, blockZ >> 4);
     }
 }

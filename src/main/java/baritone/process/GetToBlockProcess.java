@@ -195,6 +195,20 @@ public final class GetToBlockProcess extends BaritoneProcessHelper implements IG
         knownLocations = positions;
     }
 
+    // this is to signal to MineProcess that we don't care about the allowBreak setting
+    // it is NOT to be used to actually calculate a path
+    public class GetToBlockCalculationContext extends CalculationContext {
+
+        public GetToBlockCalculationContext(boolean forUseOnAnotherThread) {
+            super(GetToBlockProcess.super.baritone, forUseOnAnotherThread);
+        }
+
+        @Override
+        public double breakCostMultiplierAt(int x, int y, int z, BlockState current) {
+            return 1;
+        }
+    }
+
     private boolean rightClick() {
         for (BlockPos pos : knownLocations) {
             Optional<Rotation> reachable = RotationUtils.reachable(ctx.player(), pos, ctx.playerController().getBlockReachDistance());
@@ -238,19 +252,5 @@ public final class GetToBlockProcess extends BaritoneProcessHelper implements IG
         }
         // only these chests; you can open a crafting table or furnace even with a block on top
         return block == Blocks.ENDER_CHEST || block == Blocks.CHEST || block == Blocks.TRAPPED_CHEST;
-    }
-
-    // this is to signal to MineProcess that we don't care about the allowBreak setting
-    // it is NOT to be used to actually calculate a path
-    public class GetToBlockCalculationContext extends CalculationContext {
-
-        public GetToBlockCalculationContext(boolean forUseOnAnotherThread) {
-            super(GetToBlockProcess.super.baritone, forUseOnAnotherThread);
-        }
-
-        @Override
-        public double breakCostMultiplierAt(int x, int y, int z, BlockState current) {
-            return 1;
-        }
     }
 }

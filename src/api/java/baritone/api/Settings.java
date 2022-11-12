@@ -1285,49 +1285,6 @@ public final class Settings {
 
     public final Map<Setting<?>, Type> settingTypes;
 
-    Settings() {
-        Field[] temp = getClass().getFields();
-
-        Map<String, Setting<?>> tmpByName = new HashMap<>();
-        List<Setting<?>> tmpAll = new ArrayList<>();
-        Map<Setting<?>, Type> tmpSettingTypes = new HashMap<>();
-
-        try {
-            for (Field field : temp) {
-                if (field.getType().equals(Setting.class)) {
-                    Setting<?> setting = (Setting<?>) field.get(this);
-                    String name = field.getName();
-                    setting.name = name;
-                    name = name.toLowerCase();
-                    if (tmpByName.containsKey(name)) {
-                        throw new IllegalStateException("Duplicate setting name");
-                    }
-                    tmpByName.put(name, setting);
-                    tmpAll.add(setting);
-                    tmpSettingTypes.put(setting, ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0]);
-                }
-            }
-        } catch (IllegalAccessException e) {
-            throw new IllegalStateException(e);
-        }
-        byLowerName = Collections.unmodifiableMap(tmpByName);
-        allSettings = Collections.unmodifiableList(tmpAll);
-        settingTypes = Collections.unmodifiableMap(tmpSettingTypes);
-    }
-
-    // here be dragons
-
-    @SuppressWarnings("unchecked")
-    public <T> List<Setting<T>> getAllValuesByType(Class<T> cla$$) {
-        List<Setting<T>> result = new ArrayList<>();
-        for (Setting<?> setting : allSettings) {
-            if (setting.getValueClass().equals(cla$$)) {
-                result.add((Setting<T>) setting);
-            }
-        }
-        return result;
-    }
-
     public final class Setting<T> {
 
         public final T defaultValue;
@@ -1377,5 +1334,48 @@ public final class Settings {
         public final Type getType() {
             return settingTypes.get(this);
         }
+    }
+
+    // here be dragons
+
+    Settings() {
+        Field[] temp = getClass().getFields();
+
+        Map<String, Setting<?>> tmpByName = new HashMap<>();
+        List<Setting<?>> tmpAll = new ArrayList<>();
+        Map<Setting<?>, Type> tmpSettingTypes = new HashMap<>();
+
+        try {
+            for (Field field : temp) {
+                if (field.getType().equals(Setting.class)) {
+                    Setting<?> setting = (Setting<?>) field.get(this);
+                    String name = field.getName();
+                    setting.name = name;
+                    name = name.toLowerCase();
+                    if (tmpByName.containsKey(name)) {
+                        throw new IllegalStateException("Duplicate setting name");
+                    }
+                    tmpByName.put(name, setting);
+                    tmpAll.add(setting);
+                    tmpSettingTypes.put(setting, ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0]);
+                }
+            }
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException(e);
+        }
+        byLowerName = Collections.unmodifiableMap(tmpByName);
+        allSettings = Collections.unmodifiableList(tmpAll);
+        settingTypes = Collections.unmodifiableMap(tmpSettingTypes);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> List<Setting<T>> getAllValuesByType(Class<T> cla$$) {
+        List<Setting<T>> result = new ArrayList<>();
+        for (Setting<?> setting : allSettings) {
+            if (setting.getValueClass().equals(cla$$)) {
+                result.add((Setting<T>) setting);
+            }
+        }
+        return result;
     }
 }

@@ -65,13 +65,14 @@ public class Baritone implements IBaritone {
         }
     }
 
-    public BlockStateInterface bsi;
     private GameEventHandler gameEventHandler;
+
     private PathingBehavior pathingBehavior;
     private LookBehavior lookBehavior;
     private InventoryBehavior inventoryBehavior;
     private WaypointBehavior waypointBehavior;
     private InputOverrideHandler inputOverrideHandler;
+
     private FollowProcess followProcess;
     private MineProcess mineProcess;
     private GetToBlockProcess getToBlockProcess;
@@ -80,11 +81,15 @@ public class Baritone implements IBaritone {
     private ExploreProcess exploreProcess;
     private BackfillProcess backfillProcess;
     private FarmProcess farmProcess;
+
     private PathingControlManager pathingControlManager;
     private SelectionManager selectionManager;
     private CommandManager commandManager;
+
     private IPlayerContext playerContext;
     private WorldProvider worldProvider;
+
+    public BlockStateInterface bsi;
 
     Baritone() {
         this.gameEventHandler = new GameEventHandler(this);
@@ -116,18 +121,6 @@ public class Baritone implements IBaritone {
         this.worldProvider = new WorldProvider();
         this.selectionManager = new SelectionManager(this);
         this.commandManager = new CommandManager(this);
-    }
-
-    public static Settings settings() {
-        return BaritoneAPI.getSettings();
-    }
-
-    public static File getDir() {
-        return dir;
-    }
-
-    public static Executor getExecutor() {
-        return threadPool;
     }
 
     @Override
@@ -225,5 +218,17 @@ public class Baritone implements IBaritone {
             } catch (Exception ignored) {
             }
         }).start();
+    }
+
+    public static Settings settings() {
+        return BaritoneAPI.getSettings();
+    }
+
+    public static File getDir() {
+        return dir;
+    }
+
+    public static Executor getExecutor() {
+        return threadPool;
     }
 }

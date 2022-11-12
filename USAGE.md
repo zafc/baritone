@@ -99,7 +99,6 @@ look <a href="https://baritone.leijurv.com/baritone/api/Settings.html#field.deta
 
 There are about a hundred settings, but here are some fun / interesting / important ones that you might want to look at
 changing in normal usage of Baritone. The documentation for each can be found at the above links.
-
 - `allowBreak`
 - `allowSprint`
 - `allowPlace`

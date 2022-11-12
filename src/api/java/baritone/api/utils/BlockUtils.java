@@ -28,9 +28,6 @@ public class BlockUtils {
 
     private static transient Map<String, Block> resourceCache = new HashMap<>();
 
-    private BlockUtils() {
-    }
-
     public static String blockToString(Block block) {
         ResourceLocation loc = Registry.BLOCK.getKey(block);
         String name = loc.getPath(); // normally, only write the part after the minecraft:
@@ -65,5 +62,8 @@ public class BlockUtils {
         copy.put(name, block);
         resourceCache = copy;
         return block;
+    }
+
+    private BlockUtils() {
     }
 }

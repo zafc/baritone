@@ -1,3 +1,4 @@
+
 {
   "schemaVersion": 1,
   "id": "baritone-meteor",
@@ -13,10 +14,12 @@
     "sources": "https://github.com/cabaletta/baritone"
   },
   "license": "LGPL-3.0",
+  "icon": "assets/baritone/icon.png",
   "environment": "*",
   "entrypoints": {
   },
   "mixins": [
+    "mixins.baritone-meteor.json"
   ],
   "depends": {
     "fabricloader": ">=0.11.0",

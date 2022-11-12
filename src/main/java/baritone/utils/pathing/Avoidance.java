@@ -53,6 +53,13 @@ public class Avoidance {
         this.radiusSq = radius * radius;
     }
 
+    public double coefficient(int x, int y, int z) {
+        int xDiff = x - centerX;
+        int yDiff = y - centerY;
+        int zDiff = z - centerZ;
+        return xDiff * xDiff + yDiff * yDiff + zDiff * zDiff <= radiusSq ? coefficient : 1.0D;
+    }
+
     public static List<Avoidance> create(IPlayerContext ctx) {
         if (!Baritone.settings().avoidance.value) {
             return Collections.emptyList();
@@ -73,13 +80,6 @@ public class Avoidance {
                     .forEach(entity -> res.add(new Avoidance(entity.blockPosition(), mobCoeff, Baritone.settings().mobAvoidanceRadius.value)));
         }
         return res;
-    }
-
-    public double coefficient(int x, int y, int z) {
-        int xDiff = x - centerX;
-        int yDiff = y - centerY;
-        int zDiff = z - centerZ;
-        return xDiff * xDiff + yDiff * yDiff + zDiff * zDiff <= radiusSq ? coefficient : 1.0D;
     }
 
     public void applySpherical(Long2DoubleOpenHashMap map) {

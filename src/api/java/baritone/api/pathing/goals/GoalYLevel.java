@@ -36,6 +36,16 @@ public class GoalYLevel implements Goal, ActionCosts {
         this.level = level;
     }
 
+    @Override
+    public boolean isInGoal(int x, int y, int z) {
+        return y == level;
+    }
+
+    @Override
+    public double heuristic(int x, int y, int z) {
+        return calculate(level, y);
+    }
+
     public static double calculate(int goalY, int currentY) {
         if (currentY > goalY) {
             // need to descend
@@ -46,16 +56,6 @@ public class GoalYLevel implements Goal, ActionCosts {
             return (goalY - currentY) * JUMP_ONE_BLOCK_COST;
         }
         return 0;
-    }
-
-    @Override
-    public boolean isInGoal(int x, int y, int z) {
-        return y == level;
-    }
-
-    @Override
-    public double heuristic(int x, int y, int z) {
-        return calculate(level, y);
     }
 
     @Override

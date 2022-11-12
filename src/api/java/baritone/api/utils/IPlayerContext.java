@@ -38,13 +38,11 @@ import java.util.stream.StreamSupport;
  */
 public interface IPlayerContext {
 
+    LocalPlayer player();
+
     static double eyeHeight(boolean ifSneaking) {
         return ifSneaking ? 1.27 : 1.62;
     }
-
-    IPlayerController playerController();
-
-    LocalPlayer player();
 
     Level world();
 
@@ -52,12 +50,11 @@ public interface IPlayerContext {
         return ((ClientLevel) world()).entitiesForRendering();
     }
 
-
-    IWorldData worldData();
-
     default Stream<Entity> entitiesStream() {
         return StreamSupport.stream(entities().spliterator(), false);
     }
+
+    IPlayerController playerController();
 
     HitResult objectMouseOver();
 
@@ -94,6 +91,8 @@ public interface IPlayerContext {
     default Rotation playerRotations() {
         return new Rotation(player().getYRot(), player().getXRot());
     }
+
+    IWorldData worldData();
 
     /**
      * Returns the block that the crosshair is currently placed over. Updated once per tick.

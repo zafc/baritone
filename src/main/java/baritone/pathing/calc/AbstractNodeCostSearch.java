@@ -36,28 +36,10 @@ import java.util.Optional;
  */
 public abstract class AbstractNodeCostSearch implements IPathFinder, Helper {
 
-    /**
-     * This is really complicated and hard to explain. I wrote a comment in the old version of MineBot but it was so
-     * long it was easier as a Google Doc (because I could insert charts).
-     *
-     * @see <a href="https://docs.google.com/document/d/1WVHHXKXFdCR1Oz__KtK8sFqyvSwJN_H4lftkHFgmzlc/edit">here</a>
-     */
-    protected static final double[] COEFFICIENTS = {1.5, 2, 2.5, 3, 4, 5, 10};
-    /**
-     * If a path goes less than 5 blocks and doesn't make it to its goal, it's not worth considering.
-     */
-    protected static final double MIN_DIST_PATH = 5;
-    /**
-     * there are floating point errors caused by random combinations of traverse and diagonal over a flat area
-     * that means that sometimes there's a cost improvement of like 10 ^ -16
-     * it's not worth the time to update the costs, decrease-key the heap, potentially repropagate, etc
-     * <p>
-     * who cares about a hundredth of a tick? that's half a millisecond for crying out loud!
-     */
-    protected static final double MIN_IMPROVEMENT = 0.01;
     protected final int startX;
     protected final int startY;
     protected final int startZ;
+
     protected final Goal goal;
     protected final PathNode[] bestSoFar = new PathNode[COEFFICIENTS.length];
     private final CalculationContext context;
@@ -69,6 +51,28 @@ public abstract class AbstractNodeCostSearch implements IPathFinder, Helper {
     protected PathNode mostRecentConsidered;
     protected boolean cancelRequested;
     private volatile boolean isFinished;
+
+    /**
+     * This is really complicated and hard to explain. I wrote a comment in the old version of MineBot but it was so
+     * long it was easier as a Google Doc (because I could insert charts).
+     *
+     * @see <a href="https://docs.google.com/document/d/1WVHHXKXFdCR1Oz__KtK8sFqyvSwJN_H4lftkHFgmzlc/edit">here</a>
+     */
+    protected static final double[] COEFFICIENTS = {1.5, 2, 2.5, 3, 4, 5, 10};
+
+    /**
+     * If a path goes less than 5 blocks and doesn't make it to its goal, it's not worth considering.
+     */
+    protected static final double MIN_DIST_PATH = 5;
+
+    /**
+     * there are floating point errors caused by random combinations of traverse and diagonal over a flat area
+     * that means that sometimes there's a cost improvement of like 10 ^ -16
+     * it's not worth the time to update the costs, decrease-key the heap, potentially repropagate, etc
+     * <p>
+     * who cares about a hundredth of a tick? that's half a millisecond for crying out loud!
+     */
+    protected static final double MIN_IMPROVEMENT = 0.01;
 
     AbstractNodeCostSearch(int startX, int startY, int startZ, Goal goal, CalculationContext context) {
         this.startX = startX;

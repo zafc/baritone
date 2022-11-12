@@ -96,6 +96,13 @@ public interface IWaypoint {
         }
 
         /**
+         * @return A name that can be passed to {@link #getByName(String)} to retrieve this tag
+         */
+        public String getName() {
+            return names[0];
+        }
+
+        /**
          * Gets a tag by one of its names.
          *
          * @param name The name to search for.
@@ -124,13 +131,6 @@ public interface IWaypoint {
             }
 
             return names.toArray(new String[0]);
-        }
-
-        /**
-         * @return A name that can be passed to {@link #getByName(String)} to retrieve this tag
-         */
-        public String getName() {
-            return names[0];
         }
     }
 }

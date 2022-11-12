@@ -53,28 +53,16 @@ public class ProguardTask extends BaritoneGradleTask {
     @Input
     private String extract;
 
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
     public String getExtract() {
         return extract;
     }
 
-    public void setExtract(String extract) {
-        this.extract = extract;
+    public String getUrl() {
+        return url;
     }
 
     public String getCompType() {
         return compType;
-    }
-
-    public void setCompType(String compType) {
-        this.compType = compType;
     }
 
     @TaskAction
@@ -114,6 +102,10 @@ public class ProguardTask extends BaritoneGradleTask {
                 .get();
         if (!mcClientJar.exists()) throw new IOException("Failed to find minecraft! " + mcClientJar.getAbsolutePath());
         return mcClientJar;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     private void downloadProguard() throws Exception {
@@ -213,14 +205,6 @@ public class ProguardTask extends BaritoneGradleTask {
         return null;
     }
 
-    private void processArtifact() throws Exception {
-        if (Files.exists(this.artifactUnoptimizedPath)) {
-            Files.delete(this.artifactUnoptimizedPath);
-        }
-
-        Determinizer.determinize(this.artifactPath.toString(), this.artifactUnoptimizedPath.toString());
-    }
-
     private boolean validateJavaVersion(String java) {
         //TODO: fix for j16
 //        final JavaVersion javaVersion = new DefaultJvmVersionDetector(new DefaultExecActionFactory(new IdentityFileResolver())).getJavaVersion(java);
@@ -295,6 +279,14 @@ public class ProguardTask extends BaritoneGradleTask {
         Determinizer.determinize(this.proguardOut.toString(), this.artifactApiPath.toString());
     }
 
+    private void processArtifact() throws Exception {
+        if (Files.exists(this.artifactUnoptimizedPath)) {
+            Files.delete(this.artifactUnoptimizedPath);
+        }
+
+        Determinizer.determinize(this.artifactPath.toString(), this.artifactUnoptimizedPath.toString());
+    }
+
     private void cleanup() {
         try {
             Files.delete(this.proguardOut);
@@ -305,6 +297,14 @@ public class ProguardTask extends BaritoneGradleTask {
     private void proguardStandalone() throws Exception {
         runProguard(getTemporaryFile(compType + PROGUARD_STANDALONE_CONFIG));
         Determinizer.determinize(this.proguardOut.toString(), this.artifactStandalonePath.toString());
+    }
+
+    public void setExtract(String extract) {
+        this.extract = extract;
+    }
+
+    public void setCompType(String compType) {
+        this.compType = compType;
     }
 
     private void runProguard(Path config) throws Exception {
