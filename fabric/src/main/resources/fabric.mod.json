@@ -1,7 +1,7 @@
 
 {
   "schemaVersion": 1,
-  "id": "baritone-meteor",
+  "id": "baritone-altoclef",
   "version": "${version}",
   "name": "Baritone",
   "description": "Google Maps for Blockgame",
