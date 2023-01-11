@@ -11,7 +11,7 @@ Operating system:
 Java version:
 Minecraft version:
 Baritone version:
-Forge mods (if used): 
+Other mods (if used):
 
 ## Exception, error or logs
 Please find your `latest.log` or `debug.log` in this folder and attach it to the issue
@@ -29,7 +29,8 @@ Add your steps to reproduce the issue/bug experienced here.
 To get the modified settings run `#modified` in game
 
 ## Final checklist
-- [x] I know how to properly use check boxes 
+
+- [x] I know how to properly use check boxes
 - [ ] I have included the version of Minecraft I'm running, baritone's version and forge mods (if used).
 - [ ] I have included logs, exceptions and / or steps to reproduce the issue.
 - [ ] I have not used any OwO's or UwU's in this issue.

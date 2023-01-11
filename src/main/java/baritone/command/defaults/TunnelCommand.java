@@ -23,8 +23,8 @@ import baritone.api.command.argument.IArgConsumer;
 import baritone.api.command.exception.CommandException;
 import baritone.api.pathing.goals.Goal;
 import baritone.api.pathing.goals.GoalStrictDirection;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 
 import java.util.Arrays;
 import java.util.List;
@@ -55,7 +55,7 @@ public class TunnelCommand extends Command {
                 width--;
                 BlockPos corner1;
                 BlockPos corner2;
-                EnumFacing enumFacing = ctx.player().getHorizontalFacing();
+                Direction enumFacing = ctx.player().getDirection();
                 int addition = ((width % 2 == 0) ? 0 : 1);
                 switch (enumFacing) {
                     case EAST:
@@ -77,13 +77,13 @@ public class TunnelCommand extends Command {
                     default:
                         throw new IllegalStateException("Unexpected value: " + enumFacing);
                 }
-                logDirect(String.format("Creating a tunnel %s block(s) high, %s block(s) wide, and %s block(s) deep", height+1, width+1, depth));
+                logDirect(String.format("Creating a tunnel %s block(s) high, %s block(s) wide, and %s block(s) deep", height + 1, width + 1, depth));
                 baritone.getBuilderProcess().clearArea(corner1, corner2);
             }
         } else {
             Goal goal = new GoalStrictDirection(
                     ctx.playerFeet(),
-                    ctx.player().getHorizontalFacing()
+                    ctx.player().getDirection()
             );
             baritone.getCustomGoalProcess().setGoalAndPath(goal);
             logDirect(String.format("Goal: %s", goal.toString()));

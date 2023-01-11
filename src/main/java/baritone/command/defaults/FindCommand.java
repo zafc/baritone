@@ -18,12 +18,13 @@
 package baritone.command.defaults;
 
 import baritone.api.IBaritone;
-import baritone.api.utils.BetterBlockPos;
 import baritone.api.command.Command;
+import baritone.api.command.argument.IArgConsumer;
 import baritone.api.command.datatypes.BlockById;
 import baritone.api.command.exception.CommandException;
-import baritone.api.command.argument.IArgConsumer;
-import net.minecraft.block.Block;
+import baritone.api.utils.BetterBlockPos;
+import net.minecraft.core.Registry;
+import net.minecraft.world.level.block.Block;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,7 +47,7 @@ public class FindCommand extends Command {
         toFind.stream()
                 .flatMap(block ->
                         ctx.worldData().getCachedWorld().getLocationsOf(
-                                Block.REGISTRY.getNameForObject(block).getPath(),
+                                Registry.BLOCK.getKey(block).getPath(),
                                 Integer.MAX_VALUE,
                                 origin.x,
                                 origin.y,
@@ -71,10 +72,10 @@ public class FindCommand extends Command {
     @Override
     public List<String> getLongDesc() {
         return Arrays.asList(
-                "",
+                "The find command searches through Baritone's cache and attempts to find the location of the block.",
                 "",
                 "Usage:",
-                "> "
+                "> find <block> - Find positions of a certain block"
         );
     }
 }

@@ -18,10 +18,10 @@
 package baritone.api.utils;
 
 import baritone.api.BaritoneAPI;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 
 import java.util.Arrays;
 import java.util.Calendar;
@@ -39,28 +39,100 @@ public interface Helper {
     /**
      * Instance of {@link Helper}. Used for static-context reference.
      */
-    Helper HELPER = new Helper() {};
+    Helper HELPER = new Helper() {
+    };
 
     /**
      * Instance of the game
      */
-    Minecraft mc = Minecraft.getMinecraft();
+    Minecraft mc = Minecraft.getInstance();
 
-    static ITextComponent getPrefix() {
+    static Component getPrefix() {
         // Inner text component
         final Calendar now = Calendar.getInstance();
         final boolean xd = now.get(Calendar.MONTH) == Calendar.APRIL && now.get(Calendar.DAY_OF_MONTH) <= 3;
-        ITextComponent baritone = new TextComponentString(xd ? "Baritoe" : BaritoneAPI.getSettings().shortBaritonePrefix.value ? "B" : "Baritone");
-        baritone.getStyle().setColor(TextFormatting.LIGHT_PURPLE);
+        MutableComponent baritone = Component.literal(xd ? "Baritoe" : BaritoneAPI.getSettings().shortBaritonePrefix.value ? "B" : "Baritone");
+        baritone.setStyle(baritone.getStyle().withColor(ChatFormatting.LIGHT_PURPLE));
 
         // Outer brackets
-        ITextComponent prefix = new TextComponentString("");
-        prefix.getStyle().setColor(TextFormatting.DARK_PURPLE);
-        prefix.appendText("[");
-        prefix.appendSibling(baritone);
-        prefix.appendText("]");
+        MutableComponent prefix = Component.literal("");
+        prefix.setStyle(baritone.getStyle().withColor(ChatFormatting.DARK_PURPLE));
+        prefix.append("[");
+        prefix.append(baritone);
+        prefix.append("]");
 
         return prefix;
+    }
+
+    /**
+     * Send a message to display as a toast popup
+     *
+     * @param title   The title to display in the popup
+     * @param message The message to display in the popup
+     */
+    default void logToast(Component title, Component message) {
+        mc.execute(() -> BaritoneAPI.getSettings().toaster.value.accept(title, message));
+    }
+
+    /**
+     * Send a message to display as a toast popup
+     *
+     * @param title   The title to display in the popup
+     * @param message The message to display in the popup
+     */
+    default void logToast(String title, String message) {
+        logToast(Component.literal(title), Component.literal(message));
+    }
+
+    /**
+     * Send a message to display as a toast popup
+     *
+     * @param message The message to display in the popup
+     */
+    default void logToast(String message) {
+        logToast(Helper.getPrefix(), Component.literal(message));
+    }
+
+    /**
+     * Send a message as a desktop notification
+     *
+     * @param message The message to display in the notification
+     */
+    default void logNotification(String message) {
+        logNotification(message, false);
+    }
+
+    /**
+     * Send a message as a desktop notification
+     *
+     * @param message The message to display in the notification
+     * @param error   Whether to log as an error
+     */
+    default void logNotification(String message, boolean error) {
+        if (BaritoneAPI.getSettings().desktopNotifications.value) {
+            logNotificationDirect(message, error);
+        }
+    }
+
+    /**
+     * Send a message as a desktop notification regardless of desktopNotifications
+     * (should only be used for critically important messages)
+     *
+     * @param message The message to display in the notification
+     */
+    default void logNotificationDirect(String message) {
+        logNotificationDirect(message, false);
+    }
+
+    /**
+     * Send a message as a desktop notification regardless of desktopNotifications
+     * (should only be used for critically important messages)
+     *
+     * @param message The message to display in the notification
+     * @param error   Whether to log as an error
+     */
+    default void logNotificationDirect(String message, boolean error) {
+        mc.execute(() -> BaritoneAPI.getSettings().notifier.value.accept(message, error));
     }
 
     /**
@@ -74,7 +146,27 @@ public interface Helper {
             //System.out.println(message);
             return;
         }
-        logDirect(message);
+        // We won't log debug chat into toasts
+        // Because only a madman would want that extreme spam -_-
+        logDirect(message, false);
+    }
+
+    /**
+     * Send components to chat with the [Baritone] prefix
+     *
+     * @param logAsToast Whether to log as a toast notification
+     * @param components The components to send
+     */
+    default void logDirect(boolean logAsToast, Component... components) {
+        MutableComponent component = Component.literal("");
+        component.append(getPrefix());
+        component.append(Component.literal(" "));
+        Arrays.asList(components).forEach(component::append);
+        if (logAsToast) {
+            logToast(getPrefix(), component);
+        } else {
+            mc.execute(() -> BaritoneAPI.getSettings().logger.value.accept(component));
+        }
     }
 
     /**
@@ -82,12 +174,24 @@ public interface Helper {
      *
      * @param components The components to send
      */
-    default void logDirect(ITextComponent... components) {
-        ITextComponent component = new TextComponentString("");
-        component.appendSibling(getPrefix());
-        component.appendSibling(new TextComponentString(" "));
-        Arrays.asList(components).forEach(component::appendSibling);
-        Minecraft.getMinecraft().addScheduledTask(() -> BaritoneAPI.getSettings().logger.value.accept(component));
+    default void logDirect(Component... components) {
+        logDirect(BaritoneAPI.getSettings().logAsToast.value, components);
+    }
+
+    /**
+     * Send a message to chat regardless of chatDebug (should only be used for critically important messages, or as a
+     * direct response to a chat command)
+     *
+     * @param message    The message to display in chat
+     * @param color      The color to print that message in
+     * @param logAsToast Whether to log as a toast notification
+     */
+    default void logDirect(String message, ChatFormatting color, boolean logAsToast) {
+        Stream.of(message.split("\n")).forEach(line -> {
+            MutableComponent component = Component.literal(line.replace("\t", "    "));
+            component.setStyle(component.getStyle().withColor(color));
+            logDirect(logAsToast, component);
+        });
     }
 
     /**
@@ -97,12 +201,19 @@ public interface Helper {
      * @param message The message to display in chat
      * @param color   The color to print that message in
      */
-    default void logDirect(String message, TextFormatting color) {
-        Stream.of(message.split("\n")).forEach(line -> {
-            ITextComponent component = new TextComponentString(line.replace("\t", "    "));
-            component.getStyle().setColor(color);
-            logDirect(component);
-        });
+    default void logDirect(String message, ChatFormatting color) {
+        logDirect(message, color, BaritoneAPI.getSettings().logAsToast.value);
+    }
+
+    /**
+     * Send a message to chat regardless of chatDebug (should only be used for critically important messages, or as a
+     * direct response to a chat command)
+     *
+     * @param message    The message to display in chat
+     * @param logAsToast Whether to log as a toast notification
+     */
+    default void logDirect(String message, boolean logAsToast) {
+        logDirect(message, ChatFormatting.GRAY, logAsToast);
     }
 
     /**
@@ -112,6 +223,6 @@ public interface Helper {
      * @param message The message to display in chat
      */
     default void logDirect(String message) {
-        logDirect(message, TextFormatting.GRAY);
+        logDirect(message, BaritoneAPI.getSettings().logAsToast.value);
     }
 }

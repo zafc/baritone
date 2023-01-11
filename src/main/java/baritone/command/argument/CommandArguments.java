@@ -30,7 +30,8 @@ import java.util.regex.Pattern;
  */
 public final class CommandArguments {
 
-    private CommandArguments() {}
+    private CommandArguments() {
+    }
 
     private static final Pattern ARG_PATTERN = Pattern.compile("\\S+");
 
@@ -48,9 +49,9 @@ public final class CommandArguments {
         int lastEnd = -1;
         while (argMatcher.find()) {
             args.add(new CommandArgument(
-                args.size(),
-                argMatcher.group(),
-                string.substring(argMatcher.start())
+                    args.size(),
+                    argMatcher.group(),
+                    string.substring(argMatcher.start())
             ));
             lastEnd = argMatcher.end();
         }

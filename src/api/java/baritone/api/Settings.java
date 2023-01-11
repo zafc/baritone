@@ -17,21 +17,24 @@
 
 package baritone.api;
 
+import baritone.api.utils.NotificationHelper;
 import baritone.api.utils.SettingsUtil;
 import baritone.api.utils.TypeUtils;
-import net.minecraft.block.Block;
+import baritone.api.utils.gui.BaritoneToast;
 import net.minecraft.client.Minecraft;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.util.math.Vec3i;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.core.Vec3i;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 
 import java.awt.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.*;
 import java.util.List;
+import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -47,6 +50,11 @@ public final class Settings {
     public final Setting<Boolean> allowBreak = new Setting<>(true);
 
     /**
+     * Blocks that baritone will be allowed to break even with allowBreak set to false
+     */
+    public final Setting<List<Block>> allowBreakAnyway = new Setting<>(new ArrayList<>());
+
+    /**
      * Allow Baritone to sprint
      */
     public final Setting<Boolean> allowSprint = new Setting<>(true);
@@ -60,6 +68,19 @@ public final class Settings {
      * Allow Baritone to move items in your inventory to your hotbar
      */
     public final Setting<Boolean> allowInventory = new Setting<>(false);
+
+    /**
+     * Disable baritone's auto-tool at runtime, but still assume that another mod will provide auto tool functionality
+     * <p>
+     * Specifically, path calculation will still assume that an auto tool will run at execution time, even though
+     * Baritone itself will not do that.
+     */
+    public final Setting<Boolean> assumeExternalAutoTool = new Setting<>(false);
+
+    /**
+     * Automatically select the best available tool
+     */
+    public final Setting<Boolean> autoTool = new Setting<>(true);
 
     /**
      * It doesn't actually take twenty ticks to place a block, this cost is so high
@@ -158,10 +179,10 @@ public final class Settings {
      * Blocks that Baritone is allowed to place (as throwaway, for sneak bridging, pillaring, etc.)
      */
     public final Setting<List<Item>> acceptableThrowawayItems = new Setting<>(new ArrayList<>(Arrays.asList(
-            Item.getItemFromBlock(Blocks.DIRT),
-            Item.getItemFromBlock(Blocks.COBBLESTONE),
-            Item.getItemFromBlock(Blocks.NETHERRACK),
-            Item.getItemFromBlock(Blocks.STONE)
+            Blocks.DIRT.asItem(),
+            Blocks.COBBLESTONE.asItem(),
+            Blocks.NETHERRACK.asItem(),
+            Blocks.STONE.asItem()
     )));
 
     /**
@@ -174,15 +195,24 @@ public final class Settings {
     /**
      * Blocks that Baritone is not allowed to break
      */
+    public final Setting<List<Block>> blocksToDisallowBreaking = new Setting<>(new ArrayList<>(
+            // Leave Empty by Default
+    ));
+
+    /**
+     * blocks that baritone shouldn't break, but can if it needs to.
+     */
     public final Setting<List<Block>> blocksToAvoidBreaking = new Setting<>(new ArrayList<>(Arrays.asList( // TODO can this be a HashSet or ImmutableSet?
             Blocks.CRAFTING_TABLE,
             Blocks.FURNACE,
-            Blocks.LIT_FURNACE,
             Blocks.CHEST,
-            Blocks.TRAPPED_CHEST,
-            Blocks.STANDING_SIGN,
-            Blocks.WALL_SIGN
+            Blocks.TRAPPED_CHEST
     )));
+
+    /**
+     * this multiplies the break speed, if set above 1 it's "encourage breaking" instead
+     */
+    public final Setting<Double> avoidBreakingMultiplier = new Setting<>(.1);
 
     /**
      * A list of blocks to be treated as if they're air.
@@ -194,9 +224,57 @@ public final class Settings {
     )));
 
     /**
+     * A list of blocks to be treated as correct.
+     * <p>
+     * If a schematic asks for any block on this list at a certain position, it will be treated as correct, regardless of what it currently is.
+     */
+    public final Setting<List<Block>> buildSkipBlocks = new Setting<>(new ArrayList<>(Arrays.asList(
+
+    )));
+
+    /**
+     * A mapping of blocks to blocks treated as correct in their position
+     * <p>
+     * If a schematic asks for a block on this mapping, all blocks on the mapped list will be accepted at that location as well
+     * <p>
+     * Syntax same as <a href="https://baritone.leijurv.com/baritone/api/Settings.html#buildSubstitutes">buildSubstitutes</a>
+     */
+    public final Setting<Map<Block, List<Block>>> buildValidSubstitutes = new Setting<>(new HashMap<>());
+
+    /**
+     * A mapping of blocks to blocks to be built instead
+     * <p>
+     * If a schematic asks for a block on this mapping, Baritone will place the first placeable block in the mapped list
+     * <p>
+     * Usage Syntax:
+     * <pre>
+     *      sourceblockA->blockToSubstituteA1,blockToSubstituteA2,...blockToSubstituteAN,sourceBlockB->blockToSubstituteB1,blockToSubstituteB2,...blockToSubstituteBN,...sourceBlockX->blockToSubstituteX1,blockToSubstituteX2...blockToSubstituteXN
+     * </pre>
+     * Example:
+     * <pre>
+     *     stone->cobblestone,andesite,oak_planks->birch_planks,acacia_planks,glass
+     * </pre>
+     */
+    public final Setting<Map<Block, List<Block>>> buildSubstitutes = new Setting<>(new HashMap<>());
+
+    /**
+     * A list of blocks to become air
+     * <p>
+     * If a schematic asks for a block on this list, only air will be accepted at that location (and nothing on buildIgnoreBlocks)
+     */
+    public final Setting<List<Block>> okIfAir = new Setting<>(new ArrayList<>(Arrays.asList(
+
+    )));
+
+    /**
      * If this is true, the builder will treat all non-air blocks as correct. It will only place new blocks.
      */
     public final Setting<Boolean> buildIgnoreExisting = new Setting<>(false);
+
+    /**
+     * If this is true, the builder will ignore directionality of certain blocks like glazed terracotta.
+     */
+    public final Setting<Boolean> buildIgnoreDirection = new Setting<>(false);
 
     /**
      * If this setting is true, Baritone will never break a block that is adjacent to an unsupported falling block.
@@ -263,6 +341,11 @@ public final class Settings {
     public final Setting<Integer> rightClickSpeed = new Setting<>(4);
 
     /**
+     * How many degrees to randomize the yaw every tick. Set to 0 to disable
+     */
+    public final Setting<Double> randomLooking113 = new Setting<>(2d);
+
+    /**
      * Block reach distance
      */
     public final Setting<Float> blockReachDistance = new Setting<>(4.5f);
@@ -320,6 +403,9 @@ public final class Settings {
      */
     public final Setting<Double> mobSpawnerAvoidanceCoefficient = new Setting<>(2.0);
 
+    /**
+     * Distance to avoid mob spawners.
+     */
     public final Setting<Integer> mobSpawnerAvoidanceRadius = new Setting<>(16);
 
     /**
@@ -329,6 +415,9 @@ public final class Settings {
      */
     public final Setting<Double> mobAvoidanceCoefficient = new Setting<>(1.5);
 
+    /**
+     * Distance to avoid mobs.
+     */
     public final Setting<Integer> mobAvoidanceRadius = new Setting<>(8);
 
     /**
@@ -431,6 +520,11 @@ public final class Settings {
     public final Setting<Boolean> simplifyUnloadedYCoord = new Setting<>(true);
 
     /**
+     * Whenever a block changes, repack the whole chunk that it's in
+     */
+    public final Setting<Boolean> repackOnAnyBlockChange = new Setting<>(true);
+
+    /**
      * If a movement takes this many ticks more than its initial cost estimate, cancel it
      */
     public final Setting<Integer> movementTimeoutTicks = new Setting<>(100);
@@ -474,6 +568,17 @@ public final class Settings {
      */
     public final Setting<Long> slowPathTimeoutMS = new Setting<>(40000L);
 
+
+    /**
+     * allows baritone to save bed waypoints when interacting with beds
+     */
+    public final Setting<Boolean> doBedWaypoints = new Setting<>(true);
+
+    /**
+     * allows baritone to save death waypoints
+     */
+    public final Setting<Boolean> doDeathWaypoints = new Setting<>(true);
+
     /**
      * The big one. Download all chunks in simplified 2-bit format and save them for better very-long-distance pathing.
      */
@@ -491,16 +596,21 @@ public final class Settings {
     public final Setting<Boolean> pruneRegionsFromRAM = new Setting<>(true);
 
     /**
-     * Remember the contents of containers (chests, echests, furnaces)
-     * <p>
-     * Really buggy since the packet stuff is multithreaded badly thanks to brady
-     */
-    public final Setting<Boolean> containerMemory = new Setting<>(false);
-
-    /**
      * Fill in blocks behind you
      */
     public final Setting<Boolean> backfill = new Setting<>(false);
+
+    /**
+     * Shows popup message in the upper right corner, similarly to when you make an advancement
+     */
+    public final Setting<Boolean> logAsToast = new Setting<>(false);
+
+    /**
+     * The time of how long the message in the pop-up will display
+     * <p>
+     * If below 1000L (1sec), it's better to disable this
+     */
+    public final Setting<Long> toastTimer = new Setting<>(5000L);
 
     /**
      * Print all the debug messages to chat
@@ -511,7 +621,7 @@ public final class Settings {
      * Allow chat based control of Baritone. Most likely should be disabled when Baritone is imported for use in
      * something else
      */
-    public final Setting<Boolean> chatControl = new Setting<>(true);
+    public final Setting<Boolean> chatControl = new Setting<>(false);
 
     /**
      * Some clients like Impact try to force chatControl to off, so here's a second setting to do it anyway
@@ -532,6 +642,12 @@ public final class Settings {
      * Render the goal
      */
     public final Setting<Boolean> renderGoal = new Setting<>(true);
+
+    /**
+     * Render the goal as a sick animated thingy instead of just a box
+     * (also controls animation of GoalXZ if {@link #renderGoalXZBeacon} is enabled)
+     */
+    public final Setting<Boolean> renderGoalAnimated = new Setting<>(true);
 
     /**
      * Render selection boxes
@@ -602,7 +718,7 @@ public final class Settings {
 
     /**
      * When GetToBlockProcess or MineProcess fails to calculate a path, instead of just giving up, mark the closest instance
-     * of that block as "unreachable" and go towards the next closest. GetToBlock expands this seaarch to the whole "vein"; MineProcess does not.
+     * of that block as "unreachable" and go towards the next closest. GetToBlock expands this search to the whole "vein"; MineProcess does not.
      * This is because MineProcess finds individual impossible blocks (like one block in a vein that has gravel on top then lava, so it can't break)
      * Whereas GetToBlock should blacklist the whole "vein" if it can't get to any of them.
      */
@@ -658,6 +774,16 @@ public final class Settings {
     public final Setting<Boolean> censorRanCommands = new Setting<>(false);
 
     /**
+     * Stop using tools just before they are going to break.
+     */
+    public final Setting<Boolean> itemSaver = new Setting<>(false);
+
+    /**
+     * Durability to leave on the tool when using itemSaver
+     */
+    public final Setting<Integer> itemSaverThreshold = new Setting<>(10);
+
+    /**
      * Always prefer silk touch tools over regular tools. This will not sacrifice speed, but it will always prefer silk
      * touch tools over other tools of the same speed. This includes always choosing ANY silk touch tool over your hand.
      */
@@ -700,7 +826,25 @@ public final class Settings {
     public final Setting<Integer> maxCachedWorldScanCount = new Setting<>(10);
 
     /**
-     * When GetToBlock doesn't know any locations for the desired block, explore randomly instead of giving up.
+     * Sets the minimum y level whilst mining - set to 0 to turn off.
+     * if world has negative y values, subtract the min world height to get the value to put here
+     */
+    public final Setting<Integer> minYLevelWhileMining = new Setting<>(0);
+
+    /**
+     * This will only allow baritone to mine exposed ores, can be used to stop ore obfuscators on servers that use them.
+     */
+    public final Setting<Boolean> allowOnlyExposedOres = new Setting<>(false);
+
+    /**
+     * When allowOnlyExposedOres is enabled this is the distance around to search.
+     * <p>
+     * It is recommended to keep this value low, as it dramatically increases calculation times.
+     */
+    public final Setting<Integer> allowOnlyExposedOresDistance = new Setting<>(1);
+
+    /**
+     * When GetToBlock or non-legit Mine doesn't know any locations for the desired block, explore randomly instead of giving up.
      */
     public final Setting<Boolean> exploreForBlocks = new Setting<>(true);
 
@@ -753,10 +897,25 @@ public final class Settings {
     public final Setting<Boolean> layerOrder = new Setting<>(false);
 
     /**
+     * How high should the individual layers be?
+     */
+    public final Setting<Integer> layerHeight = new Setting<>(1);
+
+    /**
      * Start building the schematic at a specific layer.
      * Can help on larger builds when schematic wants to break things its already built
      */
     public final Setting<Integer> startAtLayer = new Setting<>(0);
+
+    /**
+     * If a layer is unable to be constructed, just skip it.
+     */
+    public final Setting<Boolean> skipFailedLayers = new Setting<>(false);
+
+    /**
+     * Only build the selected part of schematics
+     */
+    public final Setting<Boolean> buildOnlySelection = new Setting<>(false);
 
     /**
      * How far to move before repeating the build. 0 to disable repeating on a certain axis, 0,0,0 to disable entirely
@@ -767,6 +926,13 @@ public final class Settings {
      * How many times to buildrepeat. -1 for infinite.
      */
     public final Setting<Integer> buildRepeatCount = new Setting<>(-1);
+
+    /**
+     * Don't notify schematics that they are moved.
+     * e.g. replacing will replace the same spots for every repetition
+     * Mainly for backward compatibility.
+     */
+    public final Setting<Boolean> buildRepeatSneaky = new Setting<>(true);
 
     /**
      * Allow standing above a block while mining it, in BuilderProcess
@@ -876,6 +1042,7 @@ public final class Settings {
      * Disallow MineBehavior from using X-Ray to see where the ores are. Turn this option on to force it to mine "legit"
      * where it will only mine an ore once it can actually see it, so it won't do or know anything that a normal player
      * couldn't. If you don't want it to look like you're X-Raying, turn this on
+     * This will always explore, regardless of exploreForBlocks
      */
     public final Setting<Boolean> legitMine = new Setting<>(false);
 
@@ -960,7 +1127,26 @@ public final class Settings {
      * via {@link Consumer#andThen(Consumer)} or it can completely be overriden via setting
      * {@link Setting#value};
      */
-    public final Setting<Consumer<ITextComponent>> logger = new Setting<>(Minecraft.getMinecraft().ingameGUI.getChatGUI()::printChatMessage);
+    public final Setting<Consumer<Component>> logger = new Setting<>(msg -> Minecraft.getInstance().gui.getChat().addMessage(msg));
+
+    /**
+     * The function that is called when Baritone will send a desktop notification. This function can be added to
+     * via {@link Consumer#andThen(Consumer)} or it can completely be overriden via setting
+     * {@link Setting#value};
+     */
+    public final Setting<BiConsumer<String, Boolean>> notifier = new Setting<>(NotificationHelper::notify);
+
+    /**
+     * The function that is called when Baritone will show a toast. This function can be added to
+     * via {@link Consumer#andThen(Consumer)} or it can completely be overriden via setting
+     * {@link Setting#value};
+     */
+    public final Setting<BiConsumer<Component, Component>> toaster = new Setting<>(BaritoneToast::addOrUpdate);
+
+    /**
+     * Print out ALL command exceptions as a stack trace to stdout, even simple syntax errors
+     */
+    public final Setting<Boolean> verboseCommandExceptions = new Setting<>(false);
 
     /**
      * The size of the box that is rendered when the current goal is a GoalYLevel
@@ -1053,9 +1239,39 @@ public final class Settings {
     public final Setting<Boolean> renderSelectionCorners = new Setting<>(true);
 
     /**
-     * Desktop Notifications
+     * Use sword to mine.
+     */
+    public final Setting<Boolean> useSwordToMine = new Setting<>(true);
+
+    /**
+     * Desktop notifications
      */
     public final Setting<Boolean> desktopNotifications = new Setting<>(false);
+
+    /**
+     * Desktop notification on path complete
+     */
+    public final Setting<Boolean> notificationOnPathComplete = new Setting<>(true);
+
+    /**
+     * Desktop notification on farm fail
+     */
+    public final Setting<Boolean> notificationOnFarmFail = new Setting<>(true);
+
+    /**
+     * Desktop notification on build finished
+     */
+    public final Setting<Boolean> notificationOnBuildFinished = new Setting<>(true);
+
+    /**
+     * Desktop notification on explore finished
+     */
+    public final Setting<Boolean> notificationOnExploreFinished = new Setting<>(true);
+
+    /**
+     * Desktop notification on mine fail
+     */
+    public final Setting<Boolean> notificationOnMineFail = new Setting<>(true);
 
     /**
      * A map of lowercase setting field names to their respective setting
@@ -1071,8 +1287,8 @@ public final class Settings {
 
     public final class Setting<T> {
 
-        public T value;
         public final T defaultValue;
+        public T value;
         private String name;
 
         @SuppressWarnings("unchecked")

@@ -18,10 +18,10 @@
 package baritone.command.defaults;
 
 import baritone.api.IBaritone;
-import baritone.api.pathing.goals.GoalXZ;
 import baritone.api.command.Command;
-import baritone.api.command.exception.CommandException;
 import baritone.api.command.argument.IArgConsumer;
+import baritone.api.command.exception.CommandException;
+import baritone.api.pathing.goals.GoalXZ;
 
 import java.util.Arrays;
 import java.util.List;
@@ -38,7 +38,7 @@ public class ThisWayCommand extends Command {
         args.requireExactly(1);
         GoalXZ goal = GoalXZ.fromDirection(
                 ctx.playerFeetAsVec(),
-                ctx.player().rotationYawHead,
+                ctx.player().getYHeadRot(),
                 args.getAs(Double.class)
         );
         baritone.getCustomGoalProcess().setGoal(goal);

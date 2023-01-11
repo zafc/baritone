@@ -25,14 +25,18 @@ import baritone.api.cache.IWorldData;
 import baritone.api.utils.Helper;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.chunk.Chunk;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.dimension.DimensionType;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -56,11 +60,21 @@ public final class CachedWorld implements ICachedWorld, Helper {
      */
     private final String directory;
 
-    private final LinkedBlockingQueue<Chunk> toPack = new LinkedBlockingQueue<>();
+    /**
+     * Queue of positions to pack. Refers to the toPackMap, in that every element of this queue will be a
+     * key in that map.
+     */
+    private final LinkedBlockingQueue<ChunkPos> toPackQueue = new LinkedBlockingQueue<>();
 
-    private final int dimension;
+    /**
+     * All chunk positions pending packing. This map will be updated in-place if a new update to the chunk occurs
+     * while waiting in the queue for the packer thread to get to it.
+     */
+    private final Map<ChunkPos, LevelChunk> toPackMap = new ConcurrentHashMap<>();
 
-    CachedWorld(Path directory, int dimension) {
+    private final DimensionType dimension;
+
+    CachedWorld(Path directory, DimensionType dimension) {
         if (!Files.exists(directory)) {
             try {
                 Files.createDirectories(directory);
@@ -88,11 +102,9 @@ public final class CachedWorld implements ICachedWorld, Helper {
     }
 
     @Override
-    public final void queueForPacking(Chunk chunk) {
-        try {
-            toPack.put(chunk);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+    public final void queueForPacking(LevelChunk chunk) {
+        if (toPackMap.put(chunk.getPos(), chunk) == null) {
+            toPackQueue.add(chunk.getPos());
         }
     }
 
@@ -198,7 +210,7 @@ public final class CachedWorld implements ICachedWorld, Helper {
     private BlockPos guessPosition() {
         for (IBaritone ibaritone : BaritoneAPI.getProvider().getAllBaritones()) {
             IWorldData data = ibaritone.getWorldProvider().getCurrentWorld();
-            if (data != null && data.getCachedWorld() == this) {
+            if (data != null && data.getCachedWorld() == this && ibaritone.getPlayerContext().player() != null) {
                 return ibaritone.getPlayerContext().playerFeet();
             }
         }
@@ -293,13 +305,9 @@ public final class CachedWorld implements ICachedWorld, Helper {
 
         public void run() {
             while (true) {
-                // TODO: Add CachedWorld unloading to remove the redundancy of having this
-                LinkedBlockingQueue<Chunk> queue = toPack;
-                if (queue == null) {
-                    break;
-                }
                 try {
-                    Chunk chunk = queue.take();
+                    ChunkPos pos = toPackQueue.take();
+                    LevelChunk chunk = toPackMap.remove(pos);
                     CachedChunk cached = ChunkPacker.pack(chunk);
                     CachedWorld.this.updateCachedChunk(cached);
                     //System.out.println("Processed chunk at " + chunk.x + "," + chunk.z);

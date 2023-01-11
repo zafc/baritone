@@ -26,7 +26,6 @@ import baritone.api.utils.Helper;
 import baritone.api.utils.PathCalculationResult;
 import baritone.pathing.movement.CalculationContext;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import baritone.utils.NotificationHelper;
 
 import java.util.Optional;
 
@@ -42,23 +41,16 @@ public abstract class AbstractNodeCostSearch implements IPathFinder, Helper {
     protected final int startZ;
 
     protected final Goal goal;
-
+    protected final PathNode[] bestSoFar = new PathNode[COEFFICIENTS.length];
     private final CalculationContext context;
-
     /**
      * @see <a href="https://github.com/cabaletta/baritone/issues/107">Issue #107</a>
      */
     private final Long2ObjectOpenHashMap<PathNode> map;
-
     protected PathNode startNode;
-
     protected PathNode mostRecentConsidered;
-
-    protected final PathNode[] bestSoFar = new PathNode[COEFFICIENTS.length];
-
-    private volatile boolean isFinished;
-
     protected boolean cancelRequested;
+    private volatile boolean isFinished;
 
     /**
      * This is really complicated and hard to explain. I wrote a comment in the old version of MineBot but it was so
@@ -217,9 +209,7 @@ public abstract class AbstractNodeCostSearch implements IPathFinder, Helper {
         if (logInfo) {
             logDebug("Even with a cost coefficient of " + COEFFICIENTS[COEFFICIENTS.length - 1] + ", I couldn't get more than " + Math.sqrt(bestDist) + " blocks");
             logDebug("No path found =(");
-            if (Baritone.settings().desktopNotifications.value) {
-                NotificationHelper.notify("No path found =(", true);
-            }
+            logNotification("No path found =(", true);
         }
         return Optional.empty();
     }

@@ -18,8 +18,6 @@
 package baritone.api.command.argument;
 
 import baritone.api.command.ICommand;
-import baritone.api.command.exception.CommandTooManyArgumentsException;
-import baritone.api.utils.Helper;
 import baritone.api.command.argparser.IArgParser;
 import baritone.api.command.datatypes.IDatatype;
 import baritone.api.command.datatypes.IDatatypeFor;
@@ -27,7 +25,9 @@ import baritone.api.command.datatypes.IDatatypePost;
 import baritone.api.command.exception.CommandException;
 import baritone.api.command.exception.CommandInvalidTypeException;
 import baritone.api.command.exception.CommandNotEnoughArgumentsException;
-import net.minecraft.util.EnumFacing;
+import baritone.api.command.exception.CommandTooManyArgumentsException;
+import baritone.api.utils.Helper;
+import net.minecraft.core.Direction;
 
 import java.util.Deque;
 import java.util.LinkedList;
@@ -223,7 +223,7 @@ public interface IArgConsumer {
      * @param type  The type to peek as
      * @param index The index to peek
      * @return An instance of the specified type
-     * @throws CommandInvalidTypeException     If the parsing failed
+     * @throws CommandInvalidTypeException If the parsing failed
      * @see IArgParser
      * @see #peekAs(Class)
      * @see #peekAsOrDefault(Class, Object, int)
@@ -240,7 +240,7 @@ public interface IArgConsumer {
      *
      * @param type The type to peek as
      * @return An instance of the specified type
-     * @throws CommandInvalidTypeException     If the parsing failed
+     * @throws CommandInvalidTypeException If the parsing failed
      * @see IArgParser
      * @see #peekAs(Class, int)
      * @see #peekAsOrDefault(Class, Object)
@@ -404,8 +404,8 @@ public interface IArgConsumer {
     /**
      * Gets an enum value from the enum class with the same name as the next argument's value
      * <p>
-     * For example if you getEnum as an {@link EnumFacing}, and the next argument's value is "up", this will return
-     * {@link EnumFacing#UP}
+     * For example if you getEnum as an {@link Direction}, and the next argument's value is "up", this will return
+     * {@link Direction#UP}
      *
      * @param enumClass The enum class to search
      * @return An enum constant of that class with the same name as the next argument's value
@@ -419,8 +419,8 @@ public interface IArgConsumer {
     /**
      * Gets an enum value from the enum class with the same name as the next argument's value
      * <p>
-     * For example if you getEnum as an {@link EnumFacing}, and the next argument's value is "up", this will return
-     * {@link EnumFacing#UP}
+     * For example if you getEnum as an {@link Direction}, and the next argument's value is "up", this will return
+     * {@link Direction#UP}
      *
      * @param enumClass The enum class to search
      * @param def       The default value
@@ -436,8 +436,8 @@ public interface IArgConsumer {
     /**
      * Gets an enum value from the enum class with the same name as the next argument's value
      * <p>
-     * For example if you getEnum as an {@link EnumFacing}, and the next argument's value is "up", this will return
-     * {@link EnumFacing#UP}
+     * For example if you getEnum as an {@link Direction}, and the next argument's value is "up", this will return
+     * {@link Direction#UP}
      *
      * @param enumClass The enum class to search
      * @return An enum constant of that class with the same name as the next argument's value, or {@code null} if it
@@ -458,7 +458,7 @@ public interface IArgConsumer {
      *
      * @param type The type to peek as
      * @return An instance of the specified type
-     * @throws CommandInvalidTypeException     If the parsing failed
+     * @throws CommandInvalidTypeException If the parsing failed
      * @see IArgParser
      * @see #get()
      * @see #getAsOrDefault(Class, Object)

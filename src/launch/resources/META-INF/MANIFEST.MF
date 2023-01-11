@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+MixinConfigs: mixins.baritone-meteor.json
+MixinConnector: baritone.launch.BaritoneMixinConnector
+Implementation-Title: Baritone
+Implementation-Version: version

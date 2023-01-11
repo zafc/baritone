@@ -25,11 +25,14 @@ import baritone.api.utils.Helper;
 import baritone.api.utils.IPlayerContext;
 import baritone.behavior.*;
 import baritone.cache.WorldProvider;
+import baritone.command.manager.CommandManager;
 import baritone.event.GameEventHandler;
 import baritone.process.*;
 import baritone.selection.SelectionManager;
-import baritone.utils.*;
-import baritone.command.manager.CommandManager;
+import baritone.utils.BlockStateInterface;
+import baritone.utils.GuiClick;
+import baritone.utils.InputOverrideHandler;
+import baritone.utils.PathingControlManager;
 import baritone.utils.player.PrimaryPlayerContext;
 import net.minecraft.client.Minecraft;
 
@@ -53,11 +56,12 @@ public class Baritone implements IBaritone {
     static {
         threadPool = new ThreadPoolExecutor(4, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
 
-        dir = new File(Minecraft.getMinecraft().gameDir, "baritone");
+        dir = new File(Minecraft.getInstance().gameDirectory, "baritone");
         if (!Files.exists(dir.toPath())) {
             try {
                 Files.createDirectories(dir.toPath());
-            } catch (IOException ignored) {}
+            } catch (IOException ignored) {
+            }
         }
     }
 
@@ -65,8 +69,8 @@ public class Baritone implements IBaritone {
 
     private PathingBehavior pathingBehavior;
     private LookBehavior lookBehavior;
-    private MemoryBehavior memoryBehavior;
     private InventoryBehavior inventoryBehavior;
+    private WaypointBehavior waypointBehavior;
     private InputOverrideHandler inputOverrideHandler;
 
     private FollowProcess followProcess;
@@ -97,30 +101,26 @@ public class Baritone implements IBaritone {
             // the Behavior constructor calls baritone.registerBehavior(this) so this populates the behaviors arraylist
             pathingBehavior = new PathingBehavior(this);
             lookBehavior = new LookBehavior(this);
-            memoryBehavior = new MemoryBehavior(this);
             inventoryBehavior = new InventoryBehavior(this);
             inputOverrideHandler = new InputOverrideHandler(this);
+            waypointBehavior = new WaypointBehavior(this);
         }
 
         this.pathingControlManager = new PathingControlManager(this);
         {
-            followProcess = new FollowProcess(this);
-            mineProcess = new MineProcess(this);
-            customGoalProcess = new CustomGoalProcess(this); // very high iq
-            getToBlockProcess = new GetToBlockProcess(this);
-            builderProcess = new BuilderProcess(this);
-            exploreProcess = new ExploreProcess(this);
-            backfillProcess = new BackfillProcess(this);
-            farmProcess = new FarmProcess(this);
+            this.pathingControlManager.registerProcess(followProcess = new FollowProcess(this));
+            this.pathingControlManager.registerProcess(mineProcess = new MineProcess(this));
+            this.pathingControlManager.registerProcess(customGoalProcess = new CustomGoalProcess(this)); // very high iq
+            this.pathingControlManager.registerProcess(getToBlockProcess = new GetToBlockProcess(this));
+            this.pathingControlManager.registerProcess(builderProcess = new BuilderProcess(this));
+            this.pathingControlManager.registerProcess(exploreProcess = new ExploreProcess(this));
+            this.pathingControlManager.registerProcess(backfillProcess = new BackfillProcess(this));
+            this.pathingControlManager.registerProcess(farmProcess = new FarmProcess(this));
         }
 
         this.worldProvider = new WorldProvider();
         this.selectionManager = new SelectionManager(this);
         this.commandManager = new CommandManager(this);
-
-        if (BaritoneAutoTest.ENABLE_AUTO_TEST) {
-            this.gameEventHandler.registerEventListener(BaritoneAutoTest.INSTANCE);
-        }
     }
 
     @Override
@@ -150,10 +150,6 @@ public class Baritone implements IBaritone {
     @Override
     public IPlayerContext getPlayerContext() {
         return this.playerContext;
-    }
-
-    public MemoryBehavior getMemoryBehavior() {
-        return this.memoryBehavior;
     }
 
     @Override
@@ -218,8 +214,9 @@ public class Baritone implements IBaritone {
         new Thread(() -> {
             try {
                 Thread.sleep(100);
-                Helper.mc.addScheduledTask(() -> Helper.mc.displayGuiScreen(new GuiClick()));
-            } catch (Exception ignored) {}
+                Helper.mc.execute(() -> Helper.mc.setScreen(new GuiClick()));
+            } catch (Exception ignored) {
+            }
         }).start();
     }
 

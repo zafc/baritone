@@ -36,7 +36,7 @@ import baritone.pathing.path.PathExecutor;
 import baritone.utils.PathRenderer;
 import baritone.utils.PathingCommandContext;
 import baritone.utils.pathing.Favoring;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -51,6 +51,10 @@ public final class PathingBehavior extends Behavior implements IPathingBehavior,
 
     private Goal goal;
     private CalculationContext context;
+
+    /*eta*/
+    private int ticksElapsedSoFar;
+    private BetterBlockPos startPosition;
 
     private boolean safeToCancel;
     private boolean pauseRequestedLastTick;
@@ -98,6 +102,7 @@ public final class PathingBehavior extends Behavior implements IPathingBehavior,
         expectedSegmentStart = pathStart();
         baritone.getPathingControlManager().preTick();
         tickPath();
+        ticksElapsedSoFar++;
         dispatchEvents();
     }
 
@@ -152,7 +157,7 @@ public final class PathingBehavior extends Behavior implements IPathingBehavior,
                     queuePathEvent(PathEvent.AT_GOAL);
                     next = null;
                     if (Baritone.settings().disconnectOnArrival.value) {
-                        ctx.world().sendQuittingDisconnectingPacket();
+                        ctx.world().disconnect();
                     }
                     return;
                 }
@@ -233,11 +238,11 @@ public final class PathingBehavior extends Behavior implements IPathingBehavior,
         if (current != null) {
             switch (event.getState()) {
                 case PRE:
-                    lastAutoJump = mc.gameSettings.autoJump;
-                    mc.gameSettings.autoJump = false;
+                    lastAutoJump = mc.options.autoJump().get();
+                    mc.options.autoJump().set(false);
                     break;
                 case POST:
-                    mc.gameSettings.autoJump = lastAutoJump;
+                    mc.options.autoJump().set(lastAutoJump);
                     break;
                 default:
                     break;
@@ -372,6 +377,40 @@ public final class PathingBehavior extends Behavior implements IPathingBehavior,
         return context;
     }
 
+    public Optional<Double> estimatedTicksToGoal() {
+        BetterBlockPos currentPos = ctx.playerFeet();
+        if (goal == null || currentPos == null || startPosition == null) {
+            return Optional.empty();
+        }
+        if (goal.isInGoal(ctx.playerFeet())) {
+            resetEstimatedTicksToGoal();
+            return Optional.of(0.0);
+        }
+        if (ticksElapsedSoFar == 0) {
+            return Optional.empty();
+        }
+        double current = goal.heuristic(currentPos.x, currentPos.y, currentPos.z);
+        double start = goal.heuristic(startPosition.x, startPosition.y, startPosition.z);
+        if (current == start) {// can't check above because current and start can be equal even if currentPos and startPosition are not
+            return Optional.empty();
+        }
+        double eta = Math.abs(current - goal.heuristic()) * ticksElapsedSoFar / Math.abs(start - current);
+        return Optional.of(eta);
+    }
+
+    private void resetEstimatedTicksToGoal() {
+        resetEstimatedTicksToGoal(expectedSegmentStart);
+    }
+
+    private void resetEstimatedTicksToGoal(BlockPos start) {
+        resetEstimatedTicksToGoal(new BetterBlockPos(start));
+    }
+
+    private void resetEstimatedTicksToGoal(BetterBlockPos start) {
+        ticksElapsedSoFar = 0;
+        startPosition = start;
+    }
+
     /**
      * See issue #209
      *
@@ -379,10 +418,10 @@ public final class PathingBehavior extends Behavior implements IPathingBehavior,
      */
     public BetterBlockPos pathStart() { // TODO move to a helper or util class
         BetterBlockPos feet = ctx.playerFeet();
-        if (!MovementHelper.canWalkOn(ctx, feet.down())) {
-            if (ctx.player().onGround) {
-                double playerX = ctx.player().posX;
-                double playerZ = ctx.player().posZ;
+        if (!MovementHelper.canWalkOn(ctx, feet.below())) {
+            if (ctx.player().isOnGround()) {
+                double playerX = ctx.player().position().x;
+                double playerZ = ctx.player().position().z;
                 ArrayList<BetterBlockPos> closest = new ArrayList<>();
                 for (int dx = -1; dx <= 1; dx++) {
                     for (int dz = -1; dz <= 1; dz++) {
@@ -398,7 +437,7 @@ public final class PathingBehavior extends Behavior implements IPathingBehavior,
                         // can't possibly be sneaking off of this one, we're too far away
                         continue;
                     }
-                    if (MovementHelper.canWalkOn(ctx, possibleSupport.down()) && MovementHelper.canWalkThrough(ctx, possibleSupport) && MovementHelper.canWalkThrough(ctx, possibleSupport.up())) {
+                    if (MovementHelper.canWalkOn(ctx, possibleSupport.below()) && MovementHelper.canWalkThrough(ctx, possibleSupport) && MovementHelper.canWalkThrough(ctx, possibleSupport.above())) {
                         // this is plausible
                         //logDebug("Faking path start assuming player is standing off the edge of a block");
                         return possibleSupport;
@@ -408,9 +447,9 @@ public final class PathingBehavior extends Behavior implements IPathingBehavior,
             } else {
                 // !onGround
                 // we're in the middle of a jump
-                if (MovementHelper.canWalkOn(ctx, feet.down().down())) {
+                if (MovementHelper.canWalkOn(ctx, feet.below().below())) {
                     //logDebug("Faking path start assuming player is midair and falling");
-                    return feet.down();
+                    return feet.below();
                 }
             }
         }
@@ -468,6 +507,7 @@ public final class PathingBehavior extends Behavior implements IPathingBehavior,
                         if (executor.get().getPath().positions().contains(expectedSegmentStart)) {
                             queuePathEvent(PathEvent.CALC_FINISHED_NOW_EXECUTING);
                             current = executor.get();
+                            resetEstimatedTicksToGoal(start);
                         } else {
                             logDebug("Warning: discarding orphan path segment with incorrect start");
                         }

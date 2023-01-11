@@ -18,8 +18,8 @@
 package baritone.api.pathing.goals;
 
 import baritone.api.utils.SettingsUtil;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 
 /**
  * Dig a tunnel in a certain direction, but if you have to deviate from the path, go back to where you started
@@ -32,12 +32,12 @@ public class GoalStrictDirection implements Goal {
     public final int dx;
     public final int dz;
 
-    public GoalStrictDirection(BlockPos origin, EnumFacing direction) {
+    public GoalStrictDirection(BlockPos origin, Direction direction) {
         x = origin.getX();
         y = origin.getY();
         z = origin.getZ();
-        dx = direction.getXOffset();
-        dz = direction.getZOffset();
+        dx = direction.getStepX();
+        dz = direction.getStepZ();
         if (dx == 0 && dz == 0) {
             throw new IllegalArgumentException(direction + "");
         }
@@ -62,6 +62,11 @@ public class GoalStrictDirection implements Goal {
         heuristic += distanceFromStartInIncorrectDirection * 1000;
         heuristic += verticalDistanceFromStart * 1000;
         return heuristic;
+    }
+
+    @Override
+    public double heuristic() {
+        return Double.NEGATIVE_INFINITY;
     }
 
     @Override
